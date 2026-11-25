@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marico AI Telecaller Prototype</title>
+<style>
+body{margin:0;background:#f3f4f6;color:#222;font:14px/1.45 "Segoe UI",Roboto,Arial,sans-serif;overflow-x:hidden}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+h1,h2,h3{margin:0;font-weight:600}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid #b9bec7;background:#fff;border-radius:4px;padding:6px 12px;min-height:34px}
+button:hover{background:#f0f2f5}
+button.primary{background:#2b5797;border-color:#2b5797;color:#fff}
+button.primary:hover{background:#244a80}
+button:disabled{opacity:.5;cursor:default}
+input,select{border:1px solid #b9bec7;border-radius:4px;padding:6px 8px;background:#fff;font-size:15px}
+.top{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;justify-content:space-between;padding:10px 16px;background:#1f3a5f;color:#fff}
+.top h1{font-size:19px}
+.top p{margin:2px 0 0;font-size:12px;color:#c9d6e8}
+.modes{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
+.seg{display:inline-flex;gap:0}
+.seg button{border-radius:0;min-height:30px;padding:4px 10px;border-color:#7d93b5;background:#2c4a73;color:#dfe7f2}
+.seg button:first-child{border-radius:4px 0 0 4px}.seg button:last-child{border-radius:0 4px 4px 0;border-left:0}
+.seg button[aria-pressed=true]{background:#fff;color:#1f3a5f;font-weight:600}
+.tog{display:flex;gap:5px;align-items:center;color:#dfe7f2}
+.grid{display:grid;grid-template-columns:270px minmax(0,1fr) 380px;gap:8px;padding:8px;height:calc(100% - 60px);min-height:600px}
+.queue,.call,.pad{display:flex;flex-direction:column;min-height:0;background:#fff;border:1px solid #d5d9e0}
+.queue header,.pad nav{padding:8px 10px;border-bottom:1px solid #d5d9e0;background:#f7f8fa}
+.queue h2{font-size:14px}
+.kpis{font-size:12px;color:#555;margin:4px 0 6px}
+#q{width:100%}
+#list{list-style:none;margin:0;padding:0;overflow:auto;flex:1}
+#list li button{width:100%;text-align:left;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 8px;border:0;border-bottom:1px solid #eceef1;border-radius:0;background:#fff;padding:6px 10px;min-height:0}
+#list li button:hover{background:#f4f7fb}
+#list li button[aria-current=true]{background:#e3ecf8}
+#list .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#list .sc{font-weight:600;color:#2b5797}
+#list .meta{grid-column:1/-1;font-size:12px;color:#666}
+#list .off .nm{color:#888}
+.badge{font-size:11px;white-space:nowrap}
+.b-due{color:#b3261e}.b-soon{color:#8a6100}.b-off{color:#777}
+.who{padding:8px 12px;border-bottom:1px solid #d5d9e0;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:space-between;background:#f7f8fa}
+.who h2{font-size:16px}
+.who .sub{color:#555;font-size:12px}
+.who .acts{display:flex;gap:6px}
+.log{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:min(80%,600px);padding:7px 10px;border-radius:6px;border:1px solid #d6e2f3}
+.msg.a{background:#eef4fc;align-self:flex-start}
+.msg.r{background:#f6f6f6;border-color:#ddd;align-self:flex-end}
+.msg .by{display:block;font-size:11px;color:#666;font-weight:600}
+.msg.sys{align-self:center;font-size:12px;color:#777;background:none;border:0}
+.msg.think{color:#777}
+.empty{margin:20px auto;max-width:460px;color:#444;font-size:13px}
+.empty h3{font-size:14px;margin-bottom:6px}
+form.say{display:flex;gap:6px;padding:8px 12px;border-top:1px solid #d5d9e0}
+form.say input{flex:1;font-size:15px}
+#mic{display:inline-grid;place-items:center;width:40px;padding:0}
+#mic[aria-pressed=true]{background:#b3261e;border-color:#b3261e;color:#fff}
+#mic svg{width:18px;height:18px}
+.chips{display:flex;gap:4px;flex-wrap:wrap;padding:0 12px 10px;font-size:12px;align-items:center}
+.chips span{color:#666;margin-right:2px}
+.chips button{font-size:12px;min-height:26px;padding:2px 8px;background:#fafafa}
+.pad nav{display:flex;gap:2px;flex-wrap:wrap}
+.pad nav button{min-height:28px;padding:3px 9px;font-size:13px;border-radius:3px}
+.pad nav button[aria-selected=true]{background:#2b5797;border-color:#2b5797;color:#fff}
+.tab{flex:1;overflow:auto;padding:10px 12px}
+.tab[hidden]{display:none}
+.tab h3{font-size:14px;margin:4px 0 6px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:4px 6px;border:1px solid #dde1e6;text-align:left;vertical-align:top}
+th{background:#f3f5f8;font-weight:600}
+td.n{text-align:right;white-space:nowrap}
+tr.tot td{font-weight:600;background:#fafafa}
+.status{margin:8px 0;font-weight:600}
+.ok{color:#1e7a34}.bad{color:#b3261e}
+ul.evs{margin:6px 0;padding-left:18px;font-size:13px}
+.why{font-size:12px;color:#555}
+.note{font-size:12px;color:#666;margin-top:6px}
+.sug{border:1px solid #e2c766;background:#fffbea;padding:8px;font-size:13px}
+.tool{font:12px/1.4 Consolas,Menlo,monospace;padding:5px 7px;border-bottom:1px solid #eee;overflow-wrap:anywhere;white-space:pre-wrap}
+.tool b{color:#2b5797}.tool .err{color:#b3261e}
+pre{font:12px/1.4 Consolas,Menlo,monospace;background:#f7f7f7;border:1px solid #ddd;padding:8px;overflow:auto;margin:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
+.scroll{overflow-x:auto}
+.pass{color:#1e7a34;font-weight:600}.fail{color:#b3261e;font-weight:600}
+details summary{cursor:pointer}
+#pick{display:none;max-width:100%}
+@media (max-width:1100px){.grid{grid-template-columns:minmax(0,1fr) 340px}.queue{display:none}#pick{display:block}}
+@media (max-width:760px){.grid{display:block;height:auto}.call{min-height:70vh;margin-bottom:8px}.msg{max-width:92%}.log{min-height:50vh}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Marico AI Telecaller (prototype)</h1>
+    <p>Marico x IIT Madras case study | Shubham Kumar | synthetic data, simulation date 20-11-2026</p>
+  </div>
+  <div class="modes">
+    <select id="pick" aria-label="Retailer"></select>
+    <div class="seg" role="group" aria-label="Agent brain">
+      <button id="m-claude" aria-pressed="false" title="LLM mode: Claude parses free speech and calls the same tool functions">LLM mode</button>
+      <button id="m-rules" aria-pressed="true" title="Rule-based mode: Hinglish/English parser, works offline">Rule-based</button>
+    </div>
+    <label class="tog"><input type="checkbox" id="voice" checked> Voice output</label>
+  </div>
+</header>
+<main class="grid">
+  <aside class="queue" aria-label="Call plan">
+    <header>
+      <h2>Call list (sorted by priority)</h2>
+      <div class="kpis" id="kpis"></div>
+      <input id="q" type="search" placeholder="Search" aria-label="Search retailers">
+    </header>
+    <ol id="list"></ol>
+  </aside>
+  <section class="call" aria-label="Call">
+    <div class="who" id="who"></div>
+    <div class="log" id="log" aria-live="polite"></div>
+    <form class="say" id="say" autocomplete="off">
+      <button type="button" id="mic" aria-pressed="false" aria-label="Speak as the retailer" title="Speak as the retailer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <input id="txt" placeholder="Retailer reply, e.g. Parachute 500 ml ke 15" aria-label="Retailer says">
+      <button class="primary" id="send">Send</button>
+    </form>
+    <div class="chips" id="chips" aria-label="Quick retailer lines"></div>
+  </section>
+  <aside class="pad" aria-label="Agent brain">
+    <nav role="tablist">
+      <button role="tab" data-t="order" aria-selected="true">Order</button>
+      <button role="tab" data-t="plan" aria-selected="false">Pre-call analysis</button>
+      <button role="tab" data-t="tools" aria-selected="false">Tool log</button>
+      <button role="tab" data-t="json" aria-selected="false">JSON</button>
+      <button role="tab" data-t="tests" aria-selected="false">Tests</button>
+    </nav>
+    <div class="tab" id="t-order"></div>
+    <div class="tab" id="t-plan" hidden></div>
+    <div class="tab" id="t-tools" hidden></div>
+    <div class="tab" id="t-json" hidden></div>
+    <div class="tab" id="t-tests" hidden>
+      <div class="row"><button class="primary" id="runTests">Run tests</button><span class="why" id="testSum">CS01-CS19 from the workbook, SX1-SX6 surprise scenarios from the brief, RX1-RX10 extra checks. Uses the rule-based engine.</span></div>
+      <div id="testOut"></div>
+    </div>
+  </aside>
+</main>
+<script src="agent_core.js"></script>
+<script src="scenarios.js"></script>
+<script>
+{
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+let DATA = null, idx = null, plan = [], sel = 'R042', conv = null, mode = 'rules', busy = false;
+let claudeMsgs = [], sample = null, tts = null, dict = null, listening = false, rec = null;
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+
+const CHIPS = ['Haan bataiye', 'Parachute 500 ml ke 15 aur 200 ml ke 10', 'Saffola Gold 1 litre ke 20', '2 box bhej do', 'Nahi, 10 nahi 15 kar do', 'Bahut mehenga hai',
+  'Bas itna hi', 'Haan, confirm kar dijiye', 'Thoda discount do', 'Can we speak in English?', 'Abhi busy hoon, 5 baje ke baad call karna',
+  'Pichhli baar ka order galat aaya tha', 'Mujhe sales representative se baat karni hai', 'Dobara call mat karna', 'Stock full hai, Dabur scheme de raha hai'];
+
+const LANGCODE = { Hindi: 'hi-IN', Gujarati: 'gu-IN', Marathi: 'mr-IN', Tamil: 'ta-IN', Telugu: 'te-IN', Kannada: 'kn-IN', Malayalam: 'ml-IN', Bengali: 'bn-IN', Odia: 'or-IN', Assamese: 'as-IN' };
+
+function renderQueue() {
+  const q = $('#q').value.trim().toLowerCase();
+  const c = { CALL: 0, NOT_DUE: 0, DO_NOT_CALL: 0 };
+  plan.forEach(p => c[p.decision]++);
+  $('#kpis').textContent = `To call: ${c.CALL} | Not due: ${c.NOT_DUE} | DNC: ${c.DO_NOT_CALL}`;
+  const rows = plan.filter(p => !q || [p.retailer.Retailer_Name, p.retailer.City, p.language, p.rid].join(' ').toLowerCase().includes(q));
+  $('#list').innerHTML = rows.map(p => {
+    const b = p.decision === 'DO_NOT_CALL' ? '<span class="badge b-off">[DNC]</span>' : p.decision === 'NOT_DUE' ? '<span class="badge b-off">[not due]</span>' : p.dueRatio >= 1 ? '<span class="badge b-due">overdue</span>' : '<span class="badge b-soon">due</span>';
+    return `<li class="${p.decision !== 'CALL' ? 'off' : ''}"><button data-r="${esc(p.rid)}" aria-current="${p.rid === sel}"><span class="nm">${esc(p.rid)} ${esc(p.retailer.Retailer_Name)}</span><span class="sc">${p.decision === 'CALL' ? p.score : '-'}</span><span class="meta">${esc(p.retailer.City)}, ${esc(p.language)}, ${esc(p.window)} ${b}</span></button></li>`;
+  }).join('');
+  $('#pick').innerHTML = plan.map(p => `<option value="${esc(p.rid)}" ${p.rid === sel ? 'selected' : ''}>${esc(p.rid)} ${esc(p.retailer.Retailer_Name)} (${esc(p.retailer.City)}) ${p.decision === 'CALL' ? p.score : p.decision === 'NOT_DUE' ? 'not due' : 'DNC'}</option>`).join('');
+}
+
+function selectRetailer(rid) {
+  sel = rid; conv = null; claudeMsgs = []; stopVoice();
+  renderQueue(); renderWho(); renderLog(); renderPad(); renderPlan(); renderTools(); renderJson();
+}
+
+function current() { return plan.find(p => p.rid === sel); }
+
+function renderWho() {
+  const p = current(), r = p.retailer;
+  const live = conv && !conv.S.closed;
+  $('#who').innerHTML = `<div><h2>${esc(r.Retailer_ID)} - ${esc(r.Retailer_Name)}</h2><div class="sub">Owner: ${esc(r.Owner_Name)} | ${esc(r.City)}, ${esc(r.State)} | Lang: ${esc(p.language)} | Segment ${esc(r.Segment.split(' ')[0])} | Distributor ${esc(r.Distributor_ID)} | Window ${esc(p.window)}</div></div>
+  <div class="acts"><button class="primary" id="start" ${live ? 'disabled' : ''}>${conv ? 'Restart call' : 'Start call'}</button><button id="hang" ${live ? '' : 'disabled'}>End call</button></div>`;
+  $('#start').onclick = startCall; $('#hang').onclick = hangUp;
+  $('#txt').disabled = !live; $('#send').disabled = !live; $('#mic').disabled = !live || !(dict || SR);
+  if (!dict && !SR) $('#mic').title = 'Mic input needs Chrome or Edge. Type instead.';
+}
+
+function renderLog(extra) {
+  const L = $('#log');
+  if (!conv) {
+    const p = current();
+    const warn = p.decision === 'DO_NOT_CALL' ? '<p><b>Note:</b> this retailer has Do_Not_Call_Flag = Yes, so the planner will not call. You can still start a call to test.</p>' : p.decision === 'NOT_DUE' ? `<p><b>Note:</b> not due today (${esc(p.why[0])}).</p>` : '';
+    L.innerHTML = `<div class="empty"><h3>How to test</h3><ol><li>Pick a retailer from the list (sorted by call priority).</li><li>Click <b>Start call</b>. The agent speaks first.</li><li>You act as the retailer: type a reply, use the mic, or click one of the sample replies below.</li><li>Order, tool calls and final JSON are shown on the right.</li></ol>${warn}<p class="note">Current mode: ${mode === 'claude' ? 'LLM mode (Claude with tool calling, any of the 10 languages).' : 'Rule-based (Hinglish + English, works offline).'}${!sample ? ' LLM mode needs Claude, so it is off on this page; see the demo video for it.' : ''} Mic: Chrome or Edge.</p></div>`;
+    return;
+  }
+  L.innerHTML = conv.transcript.map(t => t.who === 'agent'
+    ? `<div class="msg a"><span class="by">Agent${t.tools ? ' [' + esc(t.tools) + ']' : ''}</span>${esc(t.text)}</div>`
+    : t.who === 'sys' ? `<div class="msg sys">${esc(t.text)}</div>`
+    : `<div class="msg r"><span class="by">Retailer${t.confidence !== undefined && t.confidence < 1 ? ' (ASR conf ' + t.confidence + ')' : ''}</span>${esc(t.text)}</div>`).join('') + (extra || '');
+  L.scrollTop = L.scrollHeight;
+}
+
+function renderPad() {
+  const p = current();
+  if (!conv) { $('#t-order').innerHTML = `<h3>Current order</h3><p class="why">No call yet. See the Pre-call analysis tab for the suggested basket.</p>`; return; }
+  const S = conv.S, rec = S.record();
+  const lines = (S.order ? S.order.lines.map(l => ({ sku: l.sku_id, name: S.idx.products[l.sku_id].Short, qty: l.quantity, price: l.unit_price_inr, source: l.source })) : S.cart.map(l => ({ sku: l.sku, name: l.name, qty: l.qty, price: l.price, source: l.source })));
+  const total = lines.reduce((s, l) => s + l.qty * l.price, 0);
+  const srcLbl = { cross_sell: 'cross-sell', agent_recommendation: 'suggested', agent_alternative: 'alternative', retailer_request: 'retailer' };
+  const evTxt = e => ({ CALLBACK_SCHEDULED: `Callback scheduled: ${e.when}`, COMPLAINT: `Complaint logged (${e.ticket})`, HUMAN_ESCALATION: `Escalated to human: ${e.reason || ''}`,
+    DNC_SET: 'DNC flag set', WRONG_PARTY: 'Wrong person, no data shared', DISCOUNT_REQUEST: 'Discount asked, not given (sent to sales officer)',
+    BACKORDER_FOLLOWUP: `Backorder follow-up: ${e.quantity} x ${e.sku_id}`, MARKET_INSIGHT: `Market insight: "${e.said}"`, ANOMALY_REVIEW: e.detail,
+    LOW_CONFIDENCE_ASR: 'Low ASR confidence, asked to repeat', NO_ORDER: `No order (${e.reason})`, SUGGESTION_DECLINED: 'Suggestion declined' })[e.type] || e.type;
+  $('#t-order').innerHTML = `<h3>Current order ${S.order ? '(' + esc(S.order.order_id) + ')' : '(draft)'}</h3>
+    <table><thead><tr><th>SKU</th><th>Product</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody>
+    ${lines.length ? lines.map(l => `<tr><td>${esc(l.sku)}</td><td>${esc(l.name)}${l.source !== 'retailer_request' ? ` <span class="why">(${srcLbl[l.source] || esc(l.source)})</span>` : ''}</td><td class="n">${l.qty}</td><td class="n">${inr(l.price)}</td><td class="n">${inr(l.qty * l.price)}</td></tr>`).join('') : '<tr><td colspan="5" class="why">No items yet</td></tr>'}
+    <tr class="tot"><td colspan="4">Total (billing price)</td><td class="n">${inr(total)}</td></tr></tbody></table>
+    <div class="status">Status: ${S.order ? '<span class="ok">CONFIRMED by retailer</span>' : rec.outcome !== 'IN_PROGRESS' ? esc(rec.outcome) : 'in progress'}</div>
+    ${rec.events.length ? `<b>Events</b><ul class="evs">${rec.events.map(e => `<li>${esc(evTxt(e))}</li>`).join('')}</ul>` : ''}`;
+}
+
+function renderPlan() {
+  const p = current();
+  const cmp = p.comp, W = AgentCore.W;
+  const rows = [['Urgency (days since order / cycle)', cmp.urgency, W.urgency], ['Order value', cmp.value, W.value], ['Stock availability', cmp.serviceability, W.serviceability], ['Cross-sell opportunity', cmp.opportunity, W.opportunity]];
+  const c = p.cross;
+  $('#t-plan').innerHTML = `<h3>Decision: ${p.decision === 'CALL' ? 'CALL, priority ' + p.score + '/100' : p.decision === 'NOT_DUE' ? 'SKIP (not due)' : 'DO NOT CALL'}</h3><div class="why">${esc(p.why.join('; '))}. Typical order ${inr(p.pref.Typical_Order_Value_INR)}, every ${p.freq} days. Window ${esc(p.window)}.</div>
+    <table style="margin-top:6px"><thead><tr><th>Score component</th><th>Weight</th><th>Value</th></tr></thead><tbody>${rows.map(([n, v, w]) => `<tr><td>${n}</td><td class="n">${Math.round(w * 100)}%</td><td class="n">${Math.round(v * 100)}</td></tr>`).join('')}</tbody></table>
+    <h3 style="margin-top:12px">Suggested quantities</h3><div class="scroll"><table><thead><tr><th>Product</th><th>Last</th><th>Prev</th><th>Suggest</th><th>Stock</th></tr></thead><tbody>
+    ${p.basket.slice(0, 10).map(b => `<tr title="${esc(b.reason)}"><td>${esc(b.name)}${b.lapsed ? ' <span class="why">(lapsed)</span>' : ''}</td><td class="n">${b.lastQty}</td><td class="n">${b.prevQty}</td><td class="n"><b>${b.stock ? b.suggestedQty : '-'}</b></td><td class="n ${b.stock === 0 ? 'bad' : ''}">${b.stock}${b.stockStatus === 'Low stock' ? ' (low)' : b.stock === 0 ? ' (OOS)' : ''}</td></tr>`).join('')}</tbody></table></div>
+    <p class="note">Suggest = 0.5 x last order + 0.5 x run-rate per cycle, capped at 1.5 x usual and at distributor stock. Skipped lines restart at half a cycle.</p>
+    <h3 style="margin-top:12px">Cross-sell for this call</h3><div class="sug">${c.pick ? `${esc(AgentCore.SHORT[c.pick.sku])}, ${c.pick.qty} pcs (${esc(c.pick.type)}): ${esc(c.pick.reason)}.` : 'None (nothing relevant in stock).'}<br><span class="why">Hint in data: "${esc(c.hint)}" -> ${c.hintValid ? 'valid' : 'not used: ' + esc(c.hintIssue || '')}</span></div>
+    <p class="note">Only one suggestion per call, after the retailer has given his own items.</p>`;
+}
+
+function renderTools() {
+  if (!conv || !conv.S.toolLog.length) { $('#t-tools').innerHTML = '<p class="why">Tool calls made during the call will show here (stock checks, add item, read back, confirm etc.).</p>'; return; }
+  $('#t-tools').innerHTML = conv.S.toolLog.map(t => `<div class="tool"><b>${esc(t.name)}</b>(${esc(JSON.stringify(t.args))})\n${t.result && t.result.error ? `<span class="err">ERROR ${esc(t.result.error)}</span> ${esc(t.result.message || '')}` : '=> ' + esc(JSON.stringify(t.result).slice(0, 260))}</div>`).reverse().join('');
+}
+
+function renderJson() {
+  if (!conv) { $('#t-json').innerHTML = '<p class="why">Final call record (order + events) in JSON, which can be pushed to the distributor order system.</p>'; return; }
+  const txt = JSON.stringify(conv.S.record(), null, 2);
+  $('#t-json').innerHTML = `<div class="row"><button id="copyJson">Copy</button><span class="why" id="copied"></span></div><pre>${esc(txt)}</pre>`;
+  $('#copyJson').onclick = () => navigator.clipboard.writeText(txt).then(() => { $('#copied').textContent = 'copied'; }, () => { $('#copied').textContent = 'copy not allowed here, select manually'; });
+}
+
+function refresh(extra) { renderWho(); renderLog(extra); renderPad(); renderTools(); renderJson(); }
+
+/* ---------------- speech ---------------- */
+function speak(text, lang) {
+  if (!$('#voice').checked || !text) return;
+  if (tts) { tts.speak(text, { language: lang === 'en' ? 'en' : undefined }).catch(() => {}); return; }
+  try { const u = new SpeechSynthesisUtterance(text); u.lang = lang === 'en' ? 'en-IN' : 'hi-IN'; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { }
+}
+function stopVoice() { try { tts && tts.stop(); } catch (e) { } try { speechSynthesis.cancel(); } catch (e) { } if (listening && dict) { dict.stop().catch(() => {}); } if (listening && rec) { try { rec.stop(); } catch (e) { } } }
+
+/* ---------------- Claude mode ---------------- */
+const TOOL_SPECS = [
+  ['verify_identity', 'Call once the person confirms they are the named retailer (or speaks for the shop). Unlocks account data.', { confirmed: { type: 'boolean' } }, ['confirmed']],
+  ['get_retailer_context', 'Account context: cadence, last orders, suggested quantities with stock, and the single pre-validated suggestion. Only after verify_identity.', {}, []],
+  ['find_products', 'Find exact SKUs for what the retailer said (brand, variant, pack size). Returns price and stock.', { query: { type: 'string' } }, ['query']],
+  ['check_stock', 'Stock at this retailer’s distributor, with an in-stock alternative if zero.', { sku_id: { type: 'string' } }, ['sku_id']],
+  ['add_or_update_item', 'Add a line or set a new quantity for an existing line (latest quantity wins). Quantity in pieces.', { sku_id: { type: 'string' }, quantity: { type: 'integer' }, unit: { type: 'string', description: 'piece, or what the retailer said (box, carton...)' }, source: { type: 'string', enum: ['retailer_request', 'agent_recommendation', 'cross_sell', 'agent_alternative'] } }, ['sku_id', 'quantity']],
+  ['remove_item', 'Remove a line.', { sku_id: { type: 'string' } }, ['sku_id']],
+  ['get_order_summary', 'Lines and total to read back. Required before confirm_order and again after any change.', {}, []],
+  ['confirm_order', 'Place the order after the retailer said an explicit yes to the read-back.', { retailer_confirmation: { type: 'string', description: 'the retailer’s words' } }, ['retailer_confirmation']],
+  ['schedule_callback', 'Book a callback.', { when: { type: 'string', description: 'ISO date-time' }, reason: { type: 'string' } }, ['when']],
+  ['log_complaint', 'Log a complaint about a previous order; routes it to the area sales officer.', { details: { type: 'string' }, sku_id: { type: 'string' } }, ['details']],
+  ['request_human', 'Escalate to a human sales representative (callback).', { reason: { type: 'string' } }, ['reason']],
+  ['set_do_not_call', 'Retailer asked not to be called again.', { said: { type: 'string' } }, []],
+  ['log_market_insight', 'Record competitor activity or demand signals.', { said: { type: 'string' }, kind: { type: 'string' } }, ['said']],
+  ['log_discount_request', 'Record a discount or scheme ask. Nothing is granted.', { said: { type: 'string' } }, ['said']],
+  ['log_backorder', 'Follow-up for quantity above available stock.', { sku_id: { type: 'string' }, quantity: { type: 'integer' } }, ['sku_id', 'quantity']],
+  ['end_call', 'End the call with its outcome.', { outcome: { type: 'string', enum: ['ORDER_CONFIRMED', 'NO_ORDER', 'CALLBACK_SCHEDULED', 'ESCALATED', 'DNC_SET', 'WRONG_PARTY', 'NO_ORDER_INSIGHT', 'COMPLAINT_LOGGED'] } }, ['outcome']]
+];
+function claudeTools() {
+  return TOOL_SPECS.map(([name, description, props, req]) => ({ name, description, inputSchema: { type: 'object', properties: props, required: req },
+    execute: (input) => { const r = conv.S.T[name](input || {}); conv.turnTools.push(name); setTimeout(() => { renderPad(); renderTools(); renderJson(); }, 0); return r; } }));
+}
+function brief() {
+  const p = current(), r = p.retailer, sur = r.Owner_Name.split(' ').slice(-1)[0];
+  return `You are Asha, Marico's AI sales assistant, on an outbound phone call to a General Trade retailer in India. Sound like a polite, quick field sales rep, never like an IVR. Say early that you are an AI assistant.
+CALL: ${r.Retailer_Name}, owner ${r.Owner_Name} (address as "${sur} ji"), ${r.City}, ${r.State}. Preferred language: ${p.language}. Distributor ${r.Distributor_ID}. Date ${idx.callDate}. Calling window ${p.window}.
+RULES, all mandatory:
+1 Identity first. Before any account detail, confirm you are speaking with ${r.Owner_Name} of ${r.Retailer_Name}. Wrong person or wrong number: apologise, disclose nothing, end_call WRONG_PARTY.
+2 Once confirmed: verify_identity, then get_retailer_context. Open with the last order of its top one or two lines and ask how much to send.
+3 Only exact SKUs from find_products or the context. If several pack sizes fit (e.g. "chhoti bottle"), ask which. Never guess.
+4 Quantities are pieces. Boxes, cartons, peti: ask how many pieces, pack conversion is not in master data. Dozen = 12. A volume like "10 litre" may be converted only through the pack size and must be read back.
+5 Vague quantities ("thoda zyada", "a few more than last time"): ask for the exact number.
+6 Book every line with add_or_update_item. EXCEEDS_STOCK: say the available number and ask whether to take that now with a follow-up (log_backorder) or change it. OUT_OF_STOCK: say so, offer the in-stock alternative once, no pressure.
+7 A changed quantity updates the same line; only the latest counts.
+8 At most one suggestion per call, the one in the context (or a due line), only after the retailer has finished his own lines. Accept a no.
+9 Never promise discounts, schemes, credit or delivery dates. log_discount_request for any ask. Delivery and payment follow the distributor's normal schedule and terms.
+9b Price objection ("mehenga hai", "nahi bikta"): acknowledge, mention his margin per piece (MRP minus billing price from find_products), never cut the rate, offer a smaller quantity.
+9c If a quantity is more than about 3 times his usual, confirm it once before booking (it may be a mis-hearing, e.g. 200 vs 20).
+10 Before confirming: get_order_summary, read back every line and the total, ask for a clear yes, then confirm_order. Any change after the read-back means a new read-back.
+11 Complaint about a past order: apologise, get the product and what went wrong, log_complaint. Then you may ask once about today's order.
+12 Human requested: request_human at once. Busy: schedule_callback at their time and end. "Don't call again": set_do_not_call, apologise, end. Not interested: thank and end. Stocked up or competitor news: log_market_insight, thank, end.
+13 If a retailer line is marked [unclear audio] or makes no sense, ask them to repeat. Never guess an item or a number.
+14 Speak ${p.language === 'Hindi' ? 'Hindi as romanised Hinglish' : p.language + ' (you may mix English trade words as retailers do)'}. If the retailer switches language, switch at once and keep everything agreed.
+14b If asked whether you are a robot or AI, say yes and offer a human callback. If he asks you to repeat, repeat your last line.
+15 One to three short spoken sentences per turn. Plain text only: no markdown, lists, emojis or stage directions. Finish every call with end_call.
+Reply with only the words Asha says next.`;
+}
+async function claudeTurn(userText) {
+  claudeMsgs.push({ role: 'user', content: userText });
+  conv.turnTools = [];
+  const thinking = '<div class="msg a think"><span class="by">Agent</span>thinking...</div>';
+  renderLog(thinking);
+  try {
+    const res = await sample(claudeMsgs, { tools: claudeTools(), modelTier: 'default', cache: false });
+    const text = String(res.text || '').trim() || '…';
+    claudeMsgs.push({ role: 'assistant', content: text });
+    conv.transcript.push({ who: 'agent', text, tools: conv.turnTools.join(', ') });
+    if (conv.S.T && conv.S.closed) conv.stage = 'closed';
+    speak(text, /[a-z]/i.test(text) && !/\b(hai|ji|kya|aap|main|nahi|haan)\b/i.test(text) ? 'en' : 'hi');
+  } catch (e) {
+    conv.transcript.push({ who: 'sys', text: e && e.code === 'not_granted' ? 'Claude was not allowed on this page. Switched to Offline rules.' : 'Claude did not answer (' + (e && (e.code || e.message) || 'error') + '). Try again, or switch to Offline rules.' });
+    if (e && e.code === 'not_granted') setMode('rules', true);
+  }
+  refresh();
+}
+
+/* ---------------- call flow ---------------- */
+async function startCall() {
+  stopVoice();
+  conv = new AgentCore.Conversation(idx, sel);
+  conv.mode = mode;
+  if (mode === 'claude' && sample) {
+    claudeMsgs = [];
+    refresh();
+    await claudeTurn(brief() + '\n\nThe call has just connected. Say your opening line.');
+  } else {
+    const out = conv.start();
+    refresh(); speak(out.text, out.lang);
+  }
+}
+function hangUp() {
+  if (!conv) return;
+  if (!conv.S.closed) { conv.S.T.end_call({ outcome: conv.S.outcome || 'RETAILER_HUNG_UP' }); conv.transcript.push({ who: 'sys', text: 'Call ended.' }); }
+  stopVoice(); refresh();
+}
+async function retailerSays(text, confidence) {
+  text = String(text || '').trim();
+  if (!text || !conv || conv.S.closed || busy) return;
+  busy = true; $('#txt').value = '';
+  try {
+    if (mode === 'claude' && sample) {
+      conv.transcript.push({ who: 'retailer', text, confidence });
+      await claudeTurn('Retailer: ' + text + (confidence !== undefined && confidence < 0.6 ? ' [unclear audio]' : ''));
+    } else {
+      const out = conv.hear(text, { confidence });
+      const tools = out.tools.map(t => t.name).filter(n => n !== 'end_call');
+      const last = conv.transcript[conv.transcript.length - 1];
+      if (last && last.who === 'agent' && tools.length) last.tools = tools.join(', ');
+      refresh(); speak(out.text, out.lang);
+    }
+  } finally { busy = false; }
+}
+
+function setMode(m, quiet) {
+  mode = m;
+  $('#m-claude').setAttribute('aria-pressed', m === 'claude'); $('#m-rules').setAttribute('aria-pressed', m === 'rules');
+  if (!quiet) selectRetailer(sel);
+}
+
+/* ---------------- tests ---------------- */
+function runTests() {
+  const suite = ScenarioFactory(AgentCore, DATA);
+  const res = suite.run();
+  const ok = res.filter(r => r.pass).length;
+  $('#testSum').innerHTML = `<b class="${ok === res.length ? 'pass' : 'fail'}">${ok}/${res.length} passed</b> (checked against pass criteria in the workbook)`;
+  $('#testOut').innerHTML = `<div class="scroll"><table class="res"><thead><tr><th>ID</th><th>Scenario (click to see transcript)</th><th>Result</th></tr></thead><tbody>${res.map(r => `<tr><td>${esc(r.id)}</td><td><details><summary>${esc(r.name)}</summary><ul>${r.checks.map(c => `<li class="${c.pass ? '' : 'fail'}">${c.pass ? 'OK' : 'FAIL'} - ${esc(c.check)}</li>`).join('')}</ul>${r.transcript.map(t => `<div class="why"><b>${t.who === 'agent' ? 'Agent' : 'Retailer'}:</b> ${esc(t.text)}</div>`).join('')}</details></td><td class="${r.pass ? 'pass' : 'fail'}">${r.pass ? 'Pass' : 'Fail'}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+/* ---------------- wiring ---------------- */
+$('#list').addEventListener('click', e => { const b = e.target.closest('button[data-r]'); if (b) selectRetailer(b.dataset.r); });
+$('#pick').addEventListener('change', e => selectRetailer(e.target.value));
+$('#q').addEventListener('input', renderQueue);
+$('#say').addEventListener('submit', e => { e.preventDefault(); retailerSays($('#txt').value); });
+$('#chips').innerHTML = '<span>Sample replies:</span>' + CHIPS.map(c => `<button type="button">${esc(c)}</button>`).join('');
+$('#chips').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { if (!conv || conv.S.closed) return; retailerSays(b.textContent); } });
+$('#m-claude').onclick = () => { if (sample) setMode('claude'); };
+$('#m-rules').onclick = () => setMode('rules');
+document.querySelectorAll('.pad nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.pad nav button').forEach(x => x.setAttribute('aria-selected', x === b));
+  document.querySelectorAll('.tab').forEach(t => { t.hidden = t.id !== 't-' + b.dataset.t; });
+});
+$('#runTests').onclick = runTests;
+$('#mic').onclick = () => {
+  if (!conv || conv.S.closed) return;
+  if (dict) {
+    if (listening) { dict.stop().catch(() => {}); return; }
+    stopVoice();
+    dict.start().catch(err => { conv.transcript.push({ who: 'sys', text: err && err.code === 'not_granted' ? 'Microphone not allowed; type instead.' : 'Could not start the microphone.' }); renderLog(); });
+    return;
+  }
+  if (!SR) return;
+  if (listening && rec) { rec.stop(); return; }
+  stopVoice();
+  // browser speech recognition (Chrome / Edge): Hindi by default, English once the call has switched
+  rec = new SR();
+  rec.lang = conv.S.lang === 'en' ? 'en-IN' : 'hi-IN';
+  rec.interimResults = true; rec.maxAlternatives = 1;
+  rec.onstart = () => { listening = true; $('#mic').setAttribute('aria-pressed', 'true'); };
+  rec.onend = () => { listening = false; $('#mic').setAttribute('aria-pressed', 'false'); };
+  rec.onerror = e => { listening = false; $('#mic').setAttribute('aria-pressed', 'false'); conv.transcript.push({ who: 'sys', text: e.error === 'not-allowed' ? 'Microphone not allowed in this view; type instead.' : e.error === 'no-speech' ? 'No speech heard; try again.' : 'Mic error: ' + e.error }); renderLog(); };
+  rec.onresult = e => {
+    const r = e.results[e.results.length - 1];
+    $('#txt').value = r[0].transcript;
+    if (r.isFinal) { const c = r[0].confidence; retailerSays(r[0].transcript, c > 0 && c < 1 ? Math.round(c * 100) / 100 : undefined); }
+  };
+  try { rec.start(); } catch (err) { conv.transcript.push({ who: 'sys', text: 'Could not start the microphone.' }); renderLog(); }
+};
+
+fetch('marico_data.json').then(r => r.json()).then(d => {
+  DATA = d; idx = AgentCore.buildIndex(DATA); plan = AgentCore.dailyCallPlan(idx);
+  selectRetailer(sel);
+}).catch(() => { $('#log').innerHTML = '<div class="empty"><h3>Data did not load.</h3><p>Reload the page.</p></div>'; });
+
+if (window.claude && window.claude.use) {
+  window.claude.use('sample').then(s => { sample = s; if (s) { $('#m-claude').disabled = false; setMode('claude', true); if (idx && !conv) renderLog(); } else { $('#m-claude').disabled = true; $('#m-claude').title = 'Claude is not available in this view; offline rules run instead'; } });
+  window.claude.use('tts').then(t => { tts = t; });
+  window.claude.use('dictation').then(d => {
+    dict = d;
+    if (!d) return;
+    d.onPartial(({ text }) => { $('#txt').value = text; });
+    d.onFinal(({ text }) => { retailerSays(text); });
+    d.onState(({ state }) => { listening = state === 'listening'; $('#mic').setAttribute('aria-pressed', listening); });
+    if (conv) renderWho();
+  });
+} else { $('#m-claude').disabled = true; }
+}
+</script>
+</body>
+</html>

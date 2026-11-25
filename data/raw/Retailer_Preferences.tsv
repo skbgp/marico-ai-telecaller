@@ -1,0 +1,101 @@
+Retailer_ID	Preferred_Calling_Window	Preferred_Language	Preferred_Brands	Purchase_Frequency_Days	Typical_Order_Value_INR	Cross_Sell_Opportunity	Do_Not_Call_Flag
+R001	15:00-17:00	Hindi	Set Wet, Nihar, Saffola	28	2798	Saffola Gold replenishment	Yes
+R002	17:00-19:00	Hindi	Livon, Parachute	27	3555	No clear opportunity	No
+R003	15:00-17:00	Hindi	Parachute, Nihar	12	4813	Livon / Set Wet personal care cross-sell	No
+R004	15:00-17:00	Hindi	Livon, Nihar, Parachute	13	6639	Livon / Set Wet personal care cross-sell	No
+R005	17:00-19:00	Gujarati	Nihar, Parachute, Saffola	13	6364	Saffola Gold replenishment	No
+R006	17:00-19:00	Gujarati	Set Wet, Livon, Parachute, Saffola	25	2358	Saffola Gold replenishment	No
+R007	10:00-12:00	Hindi	Saffola, Nihar, Set Wet	27	2123	Saffola Gold replenishment	No
+R008	17:00-19:00	Marathi	Nihar, Livon, Saffola, Parachute	11	5759	No clear opportunity	No
+R009	17:00-19:00	Marathi	Saffola, Set Wet, Parachute	17	8389	No clear opportunity	No
+R010	15:00-17:00	Tamil	Saffola, Parachute	24	1609	Saffola Oats cross-sell	No
+R011	17:00-19:00	Tamil	Saffola, Nihar, Set Wet	5	16449	Parachute 200 ml to 500 ml trade-up	No
+R012	17:00-19:00	Tamil	Saffola, Parachute, Set Wet	28	3093	Saffola Oats cross-sell	No
+R013	15:00-17:00	Telugu	Set Wet, Saffola, Livon	15	8616	Livon / Set Wet personal care cross-sell	No
+R014	12:00-14:00	Telugu	Parachute, Set Wet, Livon	7	17615	Saffola Gold replenishment	No
+R015	10:00-12:00	Kannada	Parachute, Livon, Set Wet, Saffola	32	1917	Saffola Gold replenishment	No
+R016	17:00-19:00	Malayalam	Set Wet, Saffola, Livon	23	2481	Livon / Set Wet personal care cross-sell	No
+R017	15:00-17:00	Bengali	Parachute, Saffola, Set Wet, Livon	12	5126	Livon / Set Wet personal care cross-sell	No
+R018	12:00-14:00	Odia	Saffola, Parachute, Nihar	22	3061	Saffola Gold replenishment	No
+R019	17:00-19:00	Hindi	Parachute, Livon	12	7179	Saffola Gold replenishment	No
+R020	10:00-12:00	Assamese	Saffola, Set Wet, Parachute, Nihar	31	3686	Parachute 200 ml to 500 ml trade-up	No
+R021	10:00-12:00	Hindi	Set Wet, Saffola, Parachute, Livon	15	8109	Saffola Oats cross-sell	No
+R022	12:00-14:00	Hindi	Parachute, Nihar, Saffola	31	1219	Parachute 200 ml to 500 ml trade-up	No
+R023	12:00-14:00	Hindi	Livon, Saffola	25	3227	Parachute 200 ml to 500 ml trade-up	No
+R024	12:00-14:00	Hindi	Parachute, Saffola, Nihar, Livon	13	7905	Livon / Set Wet personal care cross-sell	No
+R025	12:00-14:00	Gujarati	Saffola, Set Wet, Nihar, Parachute	25	2960	Saffola Oats cross-sell	Yes
+R026	15:00-17:00	Gujarati	Set Wet, Saffola	18	5040	No clear opportunity	No
+R027	10:00-12:00	Hindi	Set Wet, Livon	11	10668	Livon / Set Wet personal care cross-sell	No
+R028	15:00-17:00	Marathi	Set Wet, Saffola, Nihar, Parachute	16	5053	No clear opportunity	No
+R029	17:00-19:00	Marathi	Nihar, Saffola, Livon	11	4673	Livon / Set Wet personal care cross-sell	No
+R030	17:00-19:00	Tamil	Nihar, Parachute	11	7568	Saffola Oats cross-sell	No
+R031	12:00-14:00	Tamil	Parachute, Saffola, Livon, Set Wet	9	11199	Parachute 200 ml to 500 ml trade-up	No
+R032	17:00-19:00	Tamil	Livon, Parachute, Set Wet, Saffola	9	12969	Saffola Oats cross-sell	No
+R033	12:00-14:00	Telugu	Set Wet, Livon, Parachute, Saffola	4	10058	Parachute 200 ml to 500 ml trade-up	No
+R034	12:00-14:00	Telugu	Saffola, Parachute	13	6174	Parachute 200 ml to 500 ml trade-up	No
+R035	17:00-19:00	Kannada	Saffola, Nihar, Parachute	17	6539	No clear opportunity	No
+R036	12:00-14:00	Malayalam	Set Wet, Parachute, Saffola	10	15188	Saffola Gold replenishment	No
+R037	17:00-19:00	Bengali	Set Wet, Parachute	28	2729	No clear opportunity	No
+R038	12:00-14:00	Odia	Set Wet, Nihar, Saffola	11	13640	Saffola Gold replenishment	No
+R039	12:00-14:00	Hindi	Set Wet, Saffola, Parachute, Livon	11	8601	Saffola Gold replenishment	No
+R040	17:00-19:00	Assamese	Livon, Set Wet, Saffola	15	7848	Saffola Gold replenishment	No
+R041	12:00-14:00	Hindi	Set Wet, Livon	16	8502	Parachute 200 ml to 500 ml trade-up	No
+R042	17:00-19:00	Hindi	Saffola, Nihar, Set Wet, Parachute	9	9462	Saffola Gold replenishment	No
+R043	12:00-14:00	Hindi	Saffola, Nihar, Parachute	5	10512	Parachute 200 ml to 500 ml trade-up	No
+R044	12:00-14:00	Hindi	Saffola, Set Wet, Nihar	26	4197	No clear opportunity	No
+R045	17:00-19:00	Gujarati	Parachute, Nihar, Livon, Saffola	29	2461	Parachute 200 ml to 500 ml trade-up	No
+R046	17:00-19:00	Gujarati	Parachute, Nihar	17	7914	Saffola Gold replenishment	No
+R047	15:00-17:00	Hindi	Saffola, Nihar	18	8617	No clear opportunity	No
+R048	12:00-14:00	Marathi	Parachute, Saffola	7	13249	No clear opportunity	No
+R049	12:00-14:00	Marathi	Livon, Parachute	17	6767	Parachute 200 ml to 500 ml trade-up	No
+R050	17:00-19:00	Tamil	Parachute, Nihar, Set Wet	15	4842	No clear opportunity	No
+R051	17:00-19:00	Tamil	Nihar, Livon, Saffola, Set Wet	27	3018	Livon / Set Wet personal care cross-sell	No
+R052	12:00-14:00	Tamil	Set Wet, Nihar, Livon	27	1212	Saffola Gold replenishment	No
+R053	17:00-19:00	Telugu	Saffola, Parachute, Livon, Set Wet	26	3351	Saffola Gold replenishment	No
+R054	12:00-14:00	Telugu	Livon, Parachute	32	3019	Saffola Oats cross-sell	No
+R055	17:00-19:00	Kannada	Nihar, Parachute, Saffola, Livon	11	10645	Saffola Oats cross-sell	No
+R056	10:00-12:00	Malayalam	Set Wet, Parachute	26	2188	Parachute 200 ml to 500 ml trade-up	No
+R057	12:00-14:00	Bengali	Saffola, Nihar	12	8062	Saffola Oats cross-sell	No
+R058	15:00-17:00	Odia	Livon, Saffola, Nihar	15	5508	No clear opportunity	No
+R059	17:00-19:00	Hindi	Livon, Saffola	23	4438	No clear opportunity	No
+R060	17:00-19:00	Assamese	Saffola, Livon	12	5218	Livon / Set Wet personal care cross-sell	No
+R061	12:00-14:00	Hindi	Parachute, Livon, Nihar, Saffola	17	7046	No clear opportunity	No
+R062	17:00-19:00	Hindi	Livon, Nihar, Set Wet	6	17515	Parachute 200 ml to 500 ml trade-up	No
+R063	17:00-19:00	Hindi	Saffola, Livon, Parachute	18	5707	Saffola Oats cross-sell	No
+R064	10:00-12:00	Hindi	Livon, Nihar, Set Wet, Parachute	15	6267	Saffola Gold replenishment	No
+R065	15:00-17:00	Gujarati	Saffola, Nihar	11	8493	Livon / Set Wet personal care cross-sell	No
+R066	12:00-14:00	Gujarati	Nihar, Set Wet	16	8378	Saffola Gold replenishment	No
+R067	15:00-17:00	Hindi	Saffola, Set Wet, Parachute	13	4943	Saffola Gold replenishment	No
+R068	12:00-14:00	Marathi	Set Wet, Livon, Parachute	25	4167	Livon / Set Wet personal care cross-sell	No
+R069	10:00-12:00	Marathi	Saffola, Set Wet, Nihar, Parachute	4	10573	Parachute 200 ml to 500 ml trade-up	No
+R070	15:00-17:00	Tamil	Set Wet, Saffola, Livon, Nihar	30	2824	Saffola Gold replenishment	No
+R071	12:00-14:00	Tamil	Set Wet, Parachute, Saffola, Livon	26	1547	Parachute 200 ml to 500 ml trade-up	No
+R072	17:00-19:00	Tamil	Nihar, Saffola, Parachute, Set Wet	26	3072	Saffola Gold replenishment	No
+R073	12:00-14:00	Telugu	Livon, Parachute	24	3112	No clear opportunity	No
+R074	17:00-19:00	Telugu	Nihar, Parachute	7	10922	Parachute 200 ml to 500 ml trade-up	No
+R075	15:00-17:00	Kannada	Parachute, Saffola	14	5219	Parachute 200 ml to 500 ml trade-up	No
+R076	10:00-12:00	Malayalam	Livon, Nihar, Set Wet, Parachute	33	1389	No clear opportunity	No
+R077	15:00-17:00	Bengali	Nihar, Set Wet, Parachute, Saffola	32	3404	No clear opportunity	No
+R078	10:00-12:00	Odia	Parachute, Saffola, Nihar, Livon	13	6263	No clear opportunity	No
+R079	15:00-17:00	Hindi	Saffola, Set Wet, Parachute	26	4161	Saffola Gold replenishment	No
+R080	15:00-17:00	Assamese	Set Wet, Saffola, Livon, Parachute	5	13413	No clear opportunity	No
+R081	12:00-14:00	Hindi	Saffola, Livon, Nihar	17	6527	Parachute 200 ml to 500 ml trade-up	No
+R082	17:00-19:00	Hindi	Livon, Parachute	16	6738	Livon / Set Wet personal care cross-sell	Yes
+R083	17:00-19:00	Hindi	Set Wet, Parachute	12	8812	No clear opportunity	No
+R084	17:00-19:00	Hindi	Nihar, Livon	15	5311	Livon / Set Wet personal care cross-sell	No
+R085	17:00-19:00	Gujarati	Livon, Set Wet	29	1538	Saffola Oats cross-sell	No
+R086	12:00-14:00	Gujarati	Nihar, Livon, Parachute	32	3075	Saffola Oats cross-sell	No
+R087	15:00-17:00	Hindi	Nihar, Livon, Saffola	17	6374	Parachute 200 ml to 500 ml trade-up	No
+R088	17:00-19:00	Marathi	Parachute, Nihar, Set Wet	25	3856	Parachute 200 ml to 500 ml trade-up	No
+R089	17:00-19:00	Marathi	Set Wet, Saffola	18	8718	No clear opportunity	No
+R090	17:00-19:00	Tamil	Nihar, Saffola	22	2913	No clear opportunity	No
+R091	10:00-12:00	Tamil	Set Wet, Saffola, Livon, Parachute	13	7506	Livon / Set Wet personal care cross-sell	No
+R092	17:00-19:00	Tamil	Set Wet, Saffola, Nihar	12	6546	Livon / Set Wet personal care cross-sell	No
+R093	15:00-17:00	Telugu	Saffola, Parachute, Livon	17	6997	Parachute 200 ml to 500 ml trade-up	No
+R094	17:00-19:00	Telugu	Livon, Parachute	18	6944	Parachute 200 ml to 500 ml trade-up	No
+R095	12:00-14:00	Kannada	Livon, Parachute, Set Wet	17	6118	No clear opportunity	No
+R096	17:00-19:00	Malayalam	Set Wet, Parachute	13	6352	Livon / Set Wet personal care cross-sell	No
+R097	17:00-19:00	Bengali	Nihar, Livon	12	8099	Livon / Set Wet personal care cross-sell	No
+R098	10:00-12:00	Odia	Saffola, Parachute, Set Wet	15	5595	Livon / Set Wet personal care cross-sell	No
+R099	12:00-14:00	Hindi	Saffola, Set Wet, Livon, Nihar	28	3229	Saffola Oats cross-sell	No
+R100	17:00-19:00	Assamese	Set Wet, Saffola, Parachute, Livon	11	5774	Parachute 200 ml to 500 ml trade-up	No

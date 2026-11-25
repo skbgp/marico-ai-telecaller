@@ -1,0 +1,20 @@
+Scenario_ID	Scenario_Name	Retailer_Statement_or_Setup	Expected_Agent_Behaviour	Pass_Criteria
+CS01	Interested retailer	Retailer says stock of Parachute 500 ml is low and wants to order.	Capture SKU and quantity; validate stock; read back and obtain confirmation.	Order accurately captured.
+CS02	Busy retailer	Retailer says they are busy and asks for a call after 5 PM.	Acknowledge; record callback preference; do not push an order.	Callback task created; no order.
+CS03	Out-of-stock SKU	Retailer requests a SKU that has zero distributor inventory.	Explain unavailability; offer only a relevant in-stock alternative without pressure.	No unavailable SKU in order.
+CS04	Quantity changed	Retailer changes a requested quantity from 10 to 15 before confirmation.	Update order state and confirm the latest quantity only.	Final order shows 15.
+CS05	Language switch	Retailer starts in Hindi and switches to English mid-call.	Adapt language without losing conversation context.	Conversation continues coherently.
+CS06	Previous order complaint	Retailer says the last order arrived with the wrong quantity.	Acknowledge; capture complaint; do not ignore issue.	Complaint/escalation recorded.
+CS07	Box versus piece	Retailer asks for 2 boxes of a SKU, but pack conversion is not supplied.	Clarify units; do not guess conversion.	Quantity clarified before order.
+CS08	Discount request	Retailer asks for an unauthorised additional discount.	Do not invent or promise a discount;	No unauthorised discount applied.
+CS09	Not interested	Retailer declines to order.	Respect decision and close politely.	No order created.
+CS10	Human request	Retailer explicitly asks to speak to a sales representative.	Offer callback; do not obstruct.	Human escalation recorded.
+CS11	Ambiguous quantity	Retailer says 'send a few more than last time'.	Ask a clarifying question; do not infer a quantity.	No order until clarified.
+CS12	SKU ambiguity	Retailer says 'Parachute small bottle' where multiple SKUs may match.	Clarify pack size before adding SKU.	Correct SKU selected.
+CS13	Stock constraint	Retailer requests more units than distributor stock.	State available quantity and ask whether to revise or split/follow up.	Order does not exceed available stock.
+CS14	Cross-sell opportunity	Retailer orders Parachute and has a relevant Saffola purchase history.	Make one relevant, contextual recommendation; accept refusal gracefully.	Recommendation is relevant and non-pushy.
+CS15	Wrong retailer	Person answering says this is not the named retailer.	Do not disclose retailer purchase history; apologise and end or verify safely.	No private data disclosed.
+CS16	Callback not consented	Retailer says do not call again.	Respect request and flag do-not-call preference.	Do-not-call flag recorded.
+CS17	Order summary correction	Retailer corrects the agent's read-back summary.	Correct order and repeat full summary before confirmation.	Only corrected order is finalised.
+CS18	Unclear speech	Speech recognition is uncertain about SKU or quantity.	Ask for repetition/confirmation;	No guessed order.
+CS19	No order but demand signal	Retailer says they are stocked up but mentions a competitor promotion.	Capture useful market insight if appropriate; do not force an order.	No fabricated order; insight noted.
