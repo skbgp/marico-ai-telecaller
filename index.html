@@ -165,9 +165,9 @@ details summary{cursor:pointer}
     </div>
   </aside>
 </main>
-<script src="agent_core.js"></script>
-<script src="scenarios.js"></script>
-<script src="voice.js"></script>
+<script src="agent_core.js?v=20261126-1"></script>
+<script src="scenarios.js?v=20261126-1"></script>
+<script src="voice.js?v=20261126-1"></script>
 <script>
 {
 const $ = s => document.querySelector(s);
@@ -650,7 +650,7 @@ $('#mic').onclick = () => {
   startListening();
 };
 
-fetch('marico_data.json').then(r => r.json()).then(d => {
+fetch('marico_data.json?v=20261126-1').then(r => r.json()).then(d => {
   DATA = d; idx = AgentCore.buildIndex(DATA); plan = AgentCore.dailyCallPlan(idx);
   selectRetailer(sel);
 }).catch(() => { $('#log').innerHTML = '<div class="empty"><h3>Data did not load.</h3><p>Reload the page.</p></div>'; });
