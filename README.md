@@ -12,7 +12,7 @@ Marico x IIT Madras, AI-Powered General Trade Telecalling build challenge. Shubh
 2. Act as the retailer: type, use the mic (Chrome/Edge, Hindi or English), or click a sample reply.
 3. The right panel shows the order, the pre-call analysis (why this retailer, what and how much to suggest), every tool call, the final JSON record, and a **Tests** tab that runs all 35 scenarios in the browser.
 
-Voice: the agent speaks with the browser's own Hindi or Indian-English voice (best in Chrome or Edge; Edge's natural voices sound best). Its Hindi replies are written in Latin letters on screen, so voice.js converts them to Devanagari before speaking, reads ₹ amounts and pack sizes the Indian way, and skips order and complaint IDs.
+Voice: the agent (Asha, a female persona) speaks with the browser's own female Hindi or English voice (best in Chrome or Edge; Edge's natural voices sound best). Its Hindi replies are written in Latin letters on screen, so voice.js converts them to Devanagari before speaking, reads ₹ amounts and pack sizes the Indian way, and skips order and complaint IDs.
 
 On GitHub Pages the agent runs in rule-based mode (Hinglish + English; the greeting is in the retailer's language). LLM mode (Claude with tool calling, for free speech in any language) is in the same code but needs Claude's runtime, so it is switched off here. Both modes use the same 16 tools and checks.
 

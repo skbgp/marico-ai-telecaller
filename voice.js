@@ -66,13 +66,19 @@
     for (const p of parts) { if (out.length && (out[out.length - 1] + ' ' + p).length < 140) out[out.length - 1] += ' ' + p; else out.push(p); }
     return out;
   }
+  // Asha is a woman and her Hindi lines use female forms (bol rahi hoon, samajh gayi, karungi),
+  // so a female voice is always preferred; a male voice is used only if nothing else exists.
+  const FEMALE = /Swara|Kalpana|Lekha|Neerja|Heera|Veena|Ananya|Aditi|Samantha|Zira|Google|female/i;
+  const MALE = /Madhur|Hemant|Prabhat|Rishi|Ravi|Aarav|Kunal|Rehaan|male/i;
   function rankVoice(v, lang) {
     const n = v.name, l = (v.lang || '').replace('_', '-').toLowerCase();
-    if (lang === 'en' ? l !== 'en-in' : !l.startsWith('hi')) return -1;
+    if (lang === 'en' ? !l.startsWith('en') : !l.startsWith('hi')) return -1;
+    if (MALE.test(n) && !/female/i.test(n)) return 0.5;
     let s = 1;
-    if (/Natural|Neural|Online/i.test(n)) s += 4;          // Edge: Microsoft Swara / Madhur / Neerja (Natural)
-    if (/Google/i.test(n)) s += 3;                          // Chrome: Google हिन्दी
-    if (/Swara|Neerja|Lekha|Kalpana/i.test(n)) s += 1;
+    if (lang === 'en' && l === 'en-in') s += 2;             // Indian English accent preferred among female voices
+    if (FEMALE.test(n)) s += 10;
+    if (/Natural|Neural|Online/i.test(n)) s += 4;          // Edge: Microsoft Swara / Neerja (Natural)
+    if (/Google/i.test(n)) s += 3;                          // Chrome: Google हिन्दी (female)
     return s;
   }
   function pickVoice(lang) {
@@ -87,9 +93,9 @@
   function say(text, lang) {
     if (typeof speechSynthesis === 'undefined' || !text) return '';
     let v = pickVoice(lang === 'en' ? 'en' : 'hi'), t, uLang;
-    if (lang === 'en') { t = englishSpeech(text); uLang = 'en-IN'; }
+    if (lang === 'en') { t = englishSpeech(text); uLang = v ? v.lang : 'en-IN'; }
     else if (v) { t = speechText(text, 'hi'); uLang = v.lang; }
-    else { v = pickVoice('en'); t = englishSpeech(text); uLang = 'en-IN'; }   // no Hindi voice installed: Indian English voice reads the Hinglish
+    else { v = pickVoice('en'); t = englishSpeech(text); uLang = v ? v.lang : 'en-IN'; }   // no Hindi voice installed: Indian English voice reads the Hinglish
     speechSynthesis.cancel();
     for (const c of chunks(t)) {
       const u = new SpeechSynthesisUtterance(c);
