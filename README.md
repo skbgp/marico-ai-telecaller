@@ -3,7 +3,6 @@
 Marico x IIT Madras, AI-Powered General Trade Telecalling build challenge. Shubham Kumar, M.Tech CSE, IIT Madras.
 
 **Live demo:** https://skbgp.github.io/marico-ai-telecaller/ (open in Chrome or Edge)
-**LLM mode (Claude):** https://claude.ai/artifact/Cj3BLD6VCCf2seNrhiK4R1
 
 **Slides:** [Solution Presentation (5 slides)](slides/Solution_Presentation_Shubham_Kumar.pdf), [Scalability Approach (3 slides)](slides/Scalability_Approach_Shubham_Kumar.pdf)
 
@@ -13,7 +12,7 @@ Marico x IIT Madras, AI-Powered General Trade Telecalling build challenge. Shubh
 2. Act as the retailer: type, use the mic (Chrome/Edge, Hindi or English), or click a sample reply.
 3. The right panel shows the order, the pre-call analysis (why this retailer, what and how much to suggest), every tool call, the final JSON record, and a **Tests** tab that runs all 35 scenarios in the browser.
 
-On GitHub Pages the agent runs in rule-based mode (Hinglish + English). LLM mode (Claude with tool calling, all 10 languages) runs on the claude.ai link because it needs Claude.
+On GitHub Pages the agent runs in rule-based mode (Hinglish + English; the greeting is in the retailer's language). LLM mode (Claude with tool calling, for free speech in any language) is in the same code but needs Claude's runtime, so it is switched off here. Both modes use the same 16 tools and checks.
 
 ## Files
 
