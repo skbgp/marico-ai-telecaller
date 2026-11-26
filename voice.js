@@ -89,28 +89,53 @@
   }
   if (typeof speechSynthesis !== 'undefined') { try { speechSynthesis.getVoices(); speechSynthesis.addEventListener('voiceschanged', () => speechSynthesis.getVoices()); } catch (e) { } }
 
-  // speak with the browser voice; returns the name of the voice used (or '' if none).
-  // onDone runs once when the last sentence has been spoken (or at once if nothing can be spoken).
-  function say(text, lang, onDone) {
+  // Some browsers (Chrome, the Claude desktop browser) list no voices until speech is first used.
+  // Speaking before the list arrives means the system default voice, which can be male.
+  // warmUp() (on the Start call click) starts loading; say() waits for the list (up to 2.5 s).
+  function warmUp() {
+    if (typeof speechSynthesis === 'undefined') return;
+    try { speechSynthesis.getVoices(); const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) { }
+  }
+  function whenVoicesReady(cb, maxMs) {
+    if (typeof speechSynthesis === 'undefined' || speechSynthesis.getVoices().length) return cb();
+    let fired = false;
+    const go = () => { if (fired) return; fired = true; try { speechSynthesis.removeEventListener('voiceschanged', go); } catch (e) { } cb(); };
+    try { speechSynthesis.addEventListener('voiceschanged', go); } catch (e) { }
+    const t0 = Date.now();
+    (function poll() { if (fired) return; if (speechSynthesis.getVoices().length || Date.now() - t0 > (maxMs || 2500)) return go(); setTimeout(poll, 100); })();
+  }
+
+  let sayId = 0;
+  function stop() { sayId++; if (typeof speechSynthesis !== 'undefined') { try { speechSynthesis.cancel(); } catch (e) { } } }
+
+  // speak with the browser voice. onDone runs once when the last sentence has been spoken
+  // (or at once if nothing can be spoken); onVoice gets the name of the voice used ('' if none).
+  function say(text, lang, onDone, onVoice) {
     let doneCalled = false;
     const done = () => { if (!doneCalled) { doneCalled = true; if (onDone) onDone(); } };
-    if (typeof speechSynthesis === 'undefined' || !text) { setTimeout(done, 0); return ''; }
-    let v = pickVoice(lang === 'en' ? 'en' : 'hi'), t, uLang;
-    if (lang === 'en') { t = englishSpeech(text); uLang = v ? v.lang : 'en-IN'; }
-    else if (v) { t = speechText(text, 'hi'); uLang = v.lang; }
-    else { v = pickVoice('en'); t = englishSpeech(text); uLang = v ? v.lang : 'en-IN'; }   // no Hindi voice installed: Indian English voice reads the Hinglish
-    speechSynthesis.cancel();
-    const parts = chunks(t);
-    if (!parts.length) { setTimeout(done, 0); return ''; }
-    parts.forEach((c, i) => {
-      const u = new SpeechSynthesisUtterance(c);
-      u.lang = uLang; if (v) u.voice = v; u.rate = lang === 'en' ? 1 : 0.95;
-      if (i === parts.length - 1) { u.onend = done; u.onerror = done; }
-      speechSynthesis.speak(u);
+    if (typeof speechSynthesis === 'undefined' || !text) { if (onVoice) onVoice(''); setTimeout(done, 0); return; }
+    const id = ++sayId;
+    whenVoicesReady(() => {
+      if (id !== sayId) { done(); return; }   // stopped while waiting
+      const listed = speechSynthesis.getVoices().length > 0;
+      let v = pickVoice(lang === 'en' ? 'en' : 'hi'), t, uLang;
+      if (lang === 'en') { t = englishSpeech(text); uLang = v ? v.lang : 'en-IN'; }
+      else if (v) { t = speechText(text, 'hi'); uLang = v.lang; }
+      else if (!listed) { t = speechText(text, 'hi'); uLang = 'hi-IN'; }   // voice list never arrived: let the system use its Hindi voice
+      else { v = pickVoice('en'); t = englishSpeech(text); uLang = v ? v.lang : 'en-IN'; }   // no Hindi voice installed: an English voice reads the Hinglish
+      if (onVoice) onVoice(v ? v.name : '');
+      speechSynthesis.cancel();
+      const parts = chunks(t);
+      if (!parts.length) { setTimeout(done, 0); return; }
+      parts.forEach((c, i) => {
+        const u = new SpeechSynthesisUtterance(c);
+        u.lang = uLang; if (v) u.voice = v; u.rate = lang === 'en' ? 1 : 0.95;
+        if (i === parts.length - 1) { u.onend = done; u.onerror = done; }
+        speechSynthesis.speak(u);
+      });
+      // safety net: some browsers never fire onend (no audio device); roughly 70 ms per character
+      setTimeout(done, 1500 + t.length * 70);
     });
-    // safety net: some browsers never fire onend (no audio device); roughly 70 ms per character
-    setTimeout(done, 1500 + t.length * 70);
-    return v ? v.name : '';
   }
-  return { speechText, hindiSpeech, englishSpeech, pickVoice, say, chunks, WORDS: W };
+  return { speechText, hindiSpeech, englishSpeech, pickVoice, say, stop, warmUp, chunks, WORDS: W };
 });

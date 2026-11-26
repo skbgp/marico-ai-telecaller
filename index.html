@@ -388,13 +388,14 @@ function speak(text, lang, then) {
   agentSpeaking = true; updateStatus();
   if (tts) { Promise.resolve(tts.speak(text, { language: lang === 'en' ? 'en' : undefined })).then(fin, fin); return; }
   try {
-    const used = window.VoiceHi ? VoiceHi.say(text, lang, fin) : (setTimeout(fin, 0), '');
-    const vn = $('#voiceName');
-    if (vn) vn.textContent = used ? '(' + used + ')' : '(no voice found in this browser)';
-    if (vn && lang !== 'en' && window.VoiceHi && !VoiceHi.pickVoice('hi')) vn.textContent = '(no Hindi voice in this browser; use Chrome or Edge)';
+    if (!window.VoiceHi) { setTimeout(fin, 0); return; }
+    VoiceHi.say(text, lang, fin, used => {
+      const vn = $('#voiceName'); if (!vn) return;
+      vn.textContent = used ? '(' + used + ')' : lang !== 'en' ? '(no Hindi voice in this browser; use Chrome or Edge)' : '(no voice found in this browser)';
+    });
   } catch (e) { fin(); }
 }
-function hushAgent() { speakTok++; agentSpeaking = false; try { tts && tts.stop(); } catch (e) { } try { speechSynthesis.cancel(); } catch (e) { } }
+function hushAgent() { speakTok++; agentSpeaking = false; try { tts && tts.stop(); } catch (e) { } try { window.VoiceHi ? VoiceHi.stop() : speechSynthesis.cancel(); } catch (e) { } }
 function stopListening() { if (listening && dict) dict.stop().catch(() => {}); if (rec) { try { rec.abort(); } catch (e) { } rec = null; } listening = false; }
 function stopVoice() { hushAgent(); stopListening(); }
 
@@ -509,6 +510,7 @@ async function claudeTurn(userText) {
 /* ---------------- call flow ---------------- */
 async function startCall() {
   stopVoice(); handsFree = false; busy = false; thinking = false; pendingText = null;
+  if ($('#voice').checked && !tts && window.VoiceHi) VoiceHi.warmUp();   // load the voice list now, so the greeting gets the female voice
   const tok = ++callToken;
   conv = new AgentCore.Conversation(idx, sel);
   conv.mode = mode; claudeMsgs = [];
