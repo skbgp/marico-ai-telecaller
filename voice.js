@@ -89,19 +89,27 @@
   }
   if (typeof speechSynthesis !== 'undefined') { try { speechSynthesis.getVoices(); speechSynthesis.addEventListener('voiceschanged', () => speechSynthesis.getVoices()); } catch (e) { } }
 
-  // speak with the browser voice; returns the name of the voice used (or '' if none)
-  function say(text, lang) {
-    if (typeof speechSynthesis === 'undefined' || !text) return '';
+  // speak with the browser voice; returns the name of the voice used (or '' if none).
+  // onDone runs once when the last sentence has been spoken (or at once if nothing can be spoken).
+  function say(text, lang, onDone) {
+    let doneCalled = false;
+    const done = () => { if (!doneCalled) { doneCalled = true; if (onDone) onDone(); } };
+    if (typeof speechSynthesis === 'undefined' || !text) { setTimeout(done, 0); return ''; }
     let v = pickVoice(lang === 'en' ? 'en' : 'hi'), t, uLang;
     if (lang === 'en') { t = englishSpeech(text); uLang = v ? v.lang : 'en-IN'; }
     else if (v) { t = speechText(text, 'hi'); uLang = v.lang; }
     else { v = pickVoice('en'); t = englishSpeech(text); uLang = v ? v.lang : 'en-IN'; }   // no Hindi voice installed: Indian English voice reads the Hinglish
     speechSynthesis.cancel();
-    for (const c of chunks(t)) {
+    const parts = chunks(t);
+    if (!parts.length) { setTimeout(done, 0); return ''; }
+    parts.forEach((c, i) => {
       const u = new SpeechSynthesisUtterance(c);
       u.lang = uLang; if (v) u.voice = v; u.rate = lang === 'en' ? 1 : 0.95;
+      if (i === parts.length - 1) { u.onend = done; u.onerror = done; }
       speechSynthesis.speak(u);
-    }
+    });
+    // safety net: some browsers never fire onend (no audio device); roughly 70 ms per character
+    setTimeout(done, 1500 + t.length * 70);
     return v ? v.name : '';
   }
   return { speechText, hindiSpeech, englishSpeech, pickVoice, say, chunks, WORDS: W };

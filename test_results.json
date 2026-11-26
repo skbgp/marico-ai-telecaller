@@ -3302,6 +3302,707 @@
   }
  },
  {
+  "id": "RX11",
+  "name": "Owner not at the shop: callback booked, nothing disclosed",
+  "rid": "R042",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Callback booked for 7 pm",
+    "pass": true
+   },
+   {
+    "check": "Identity not verified, no account data read",
+    "pass": true
+   },
+   {
+    "check": "Not treated as a wrong number",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "Namaste! Main Marico ki AI sales assistant Asha bol rahi hoon. Kya meri baat Sharma General Store ke Ramesh Sharma ji se ho rahi hai? Parachute aur Saffola ke order ke liye do minute chahiye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Sharma ji abhi dukaan pe nahi hain, 7 baje aayenge."
+   },
+   {
+    "who": "agent",
+    "text": "Koi baat nahi. Main Sharma ji se baad mein baat kar loongi, aaj shaam 7 baje dobara call karungi. Dhanyavaad!",
+    "lang": "hi"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R042-01",
+   "retailer_id": "R042",
+   "distributor_id": "D001",
+   "outcome": "CALLBACK_SCHEDULED",
+   "identity_verified": false,
+   "order": null,
+   "events": [
+    {
+     "type": "CALLBACK_SCHEDULED",
+     "when": "2026-11-20T19:00",
+     "reason": "Owner not available",
+     "said": "Sharma ji abhi dukaan pe nahi hain, 7 baje aayenge."
+    },
+    {
+     "type": "OWNER_UNAVAILABLE",
+     "note": "No account data disclosed"
+    }
+   ]
+  }
+ },
+ {
+  "id": "RX12",
+  "name": "Asks for English at the greeting: identity asked again in English",
+  "rid": "R042",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Identity question repeated in English",
+    "pass": true
+   },
+   {
+    "check": "Order taken in English after identity",
+    "pass": true
+   },
+   {
+    "check": "Line booked",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "Namaste! Main Marico ki AI sales assistant Asha bol rahi hoon. Kya meri baat Sharma General Store ke Ramesh Sharma ji se ho rahi hai? Parachute aur Saffola ke order ke liye do minute chahiye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Can we speak in English?"
+   },
+   {
+    "who": "agent",
+    "text": "Sure. Am I speaking with Ramesh Sharma of Sharma General Store?",
+    "lang": "en"
+   },
+   {
+    "who": "retailer",
+    "text": "Yes, speaking."
+   },
+   {
+    "who": "agent",
+    "text": "Thank you, Sharma ji! Last time you took 12 pieces of Parachute 500 ml and 8 pieces of 200 ml, 11 days ago. How much should I send this time?",
+    "lang": "en"
+   },
+   {
+    "who": "retailer",
+    "text": "Parachute 500 ml, 10 pieces."
+   },
+   {
+    "who": "agent",
+    "text": "Done, I've noted 10 pieces of Parachute 500 ml. Anything else?",
+    "lang": "en"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R042-01",
+   "retailer_id": "R042",
+   "distributor_id": "D001",
+   "outcome": "IN_PROGRESS",
+   "identity_verified": true,
+   "order": null,
+   "events": []
+  }
+ },
+ {
+  "id": "RX13",
+  "name": "\"Rehne do\" when stock is short: nothing added",
+  "rid": "R042",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Saffola Gold not added",
+    "pass": true
+   },
+   {
+    "check": "No follow-up booked",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "Namaste! Main Marico ki AI sales assistant Asha bol rahi hoon. Kya meri baat Sharma General Store ke Ramesh Sharma ji se ho rahi hai? Parachute aur Saffola ke order ke liye do minute chahiye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Haan."
+   },
+   {
+    "who": "agent",
+    "text": "Dhanyavaad Sharma ji! Pichhli baar aapne Parachute 500 ml ke 12 pieces aur 200 ml ke 8 pieces liye the, 11 din pehle. Is baar kitna bhejun?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Saffola Gold 1 litre ke 20."
+   },
+   {
+    "who": "agent",
+    "text": "Saffola Gold 1 litre pouch ke abhi distributor ke paas sirf 13 pieces hain. Abhi 13 bhej doon aur baaki 7 ke liye follow-up rakhun, ya quantity badalni hai?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Nahi, rehne do."
+   },
+   {
+    "who": "agent",
+    "text": "Koi baat nahi. Aur kuch chahiye?",
+    "lang": "hi"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R042-01",
+   "retailer_id": "R042",
+   "distributor_id": "D001",
+   "outcome": "IN_PROGRESS",
+   "identity_verified": true,
+   "order": null,
+   "events": []
+  }
+ },
+ {
+  "id": "RX14",
+  "name": "Running total on request, order stays open",
+  "rid": "R042",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Total read out (15 x 196 + 10 x 84 = 3,780)",
+    "pass": true
+   },
+   {
+    "check": "Nothing placed yet",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "Namaste! Main Marico ki AI sales assistant Asha bol rahi hoon. Kya meri baat Sharma General Store ke Ramesh Sharma ji se ho rahi hai? Parachute aur Saffola ke order ke liye do minute chahiye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Haan."
+   },
+   {
+    "who": "agent",
+    "text": "Dhanyavaad Sharma ji! Pichhli baar aapne Parachute 500 ml ke 12 pieces aur 200 ml ke 8 pieces liye the, 11 din pehle. Is baar kitna bhejun?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Parachute 500 ml ke 15 aur 200 ml ke 10."
+   },
+   {
+    "who": "agent",
+    "text": "Theek hai, Parachute 500 ml ke 15 pieces aur Parachute 200 ml ke 10 pieces note kar liya. Aur kuch chahiye?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Kitna hua total?"
+   },
+   {
+    "who": "agent",
+    "text": "Abhi tak Parachute 500 ml ke 15 pieces aur 200 ml ke 10 pieces, kul ₹3,780. Aur kuch chahiye?",
+    "lang": "hi"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R042-01",
+   "retailer_id": "R042",
+   "distributor_id": "D001",
+   "outcome": "IN_PROGRESS",
+   "identity_verified": true,
+   "order": null,
+   "events": []
+  }
+ },
+ {
+  "id": "RX15",
+  "name": "Price question during the suggestion keeps it open",
+  "rid": "R042",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Margin given, suggestion asked again",
+    "pass": true
+   },
+   {
+    "check": "Suggested item booked after yes",
+    "pass": true
+   },
+   {
+    "check": "Order confirmed",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "Namaste! Main Marico ki AI sales assistant Asha bol rahi hoon. Kya meri baat Sharma General Store ke Ramesh Sharma ji se ho rahi hai? Parachute aur Saffola ke order ke liye do minute chahiye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Haan."
+   },
+   {
+    "who": "agent",
+    "text": "Dhanyavaad Sharma ji! Pichhli baar aapne Parachute 500 ml ke 12 pieces aur 200 ml ke 8 pieces liye the, 11 din pehle. Is baar kitna bhejun?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Parachute 500 ml ke 15 aur 200 ml ke 10."
+   },
+   {
+    "who": "agent",
+    "text": "Theek hai, Parachute 500 ml ke 15 pieces aur Parachute 200 ml ke 10 pieces note kar liya. Aur kuch chahiye?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Bas."
+   },
+   {
+    "who": "agent",
+    "text": "Ek chhota suggestion: aapke yahan Saffola Gold 1 litre pouch bhi regularly jata hai, pichhli baar 7 liye the. Is baar 7 bhej doon?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Kitne ka hai?"
+   },
+   {
+    "who": "agent",
+    "text": "Saffola Gold 1 litre pouch: billing rate ₹182, MRP ₹210, yaani aapka margin ₹28 per piece. 7 bhej doon?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Theek hai, bhej do."
+   },
+   {
+    "who": "agent",
+    "text": "Saffola Gold 1 litre pouch ke 7 pieces add kar diya. Main order dohra deti hoon: Parachute 500 ml ke 15 pieces, 200 ml ke 10 pieces aur Saffola Gold 1 litre pouch ke 7 pieces. Kul order value ₹5,054. Kya main ye order place kar doon?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Haan, confirm kar dijiye."
+   },
+   {
+    "who": "agent",
+    "text": "Dhanyavaad Sharma ji! Aapka order ORD-20261120-R042-001 place ho gaya hai aur distributor ko bhej diya gaya hai. Aapka din shubh ho!",
+    "lang": "hi"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R042-01",
+   "retailer_id": "R042",
+   "distributor_id": "D001",
+   "outcome": "ORDER_CONFIRMED",
+   "identity_verified": true,
+   "order": {
+    "order_id": "ORD-20261120-R042-001",
+    "call_id": "CALL-20261120-R042-01",
+    "channel": "AI_TELECALL",
+    "created_on": "2026-11-20",
+    "retailer_id": "R042",
+    "retailer_name": "Sharma General Store",
+    "distributor_id": "D001",
+    "language": "hi",
+    "lines": [
+     {
+      "line_no": 1,
+      "sku_id": "P003",
+      "product": "Parachute Coconut Oil",
+      "pack_size": "500 ml",
+      "quantity": 15,
+      "selling_unit": "Bottle",
+      "unit_price_inr": 196,
+      "line_value_inr": 2940,
+      "source": "retailer_request"
+     },
+     {
+      "line_no": 2,
+      "sku_id": "P002",
+      "product": "Parachute Coconut Oil",
+      "pack_size": "200 ml",
+      "quantity": 10,
+      "selling_unit": "Bottle",
+      "unit_price_inr": 84,
+      "line_value_inr": 840,
+      "source": "retailer_request"
+     },
+     {
+      "line_no": 3,
+      "sku_id": "P006",
+      "product": "Saffola Gold Edible Oil",
+      "pack_size": "1 L",
+      "quantity": 7,
+      "selling_unit": "Pouch",
+      "unit_price_inr": 182,
+      "line_value_inr": 1274,
+      "source": "agent_recommendation"
+     }
+    ],
+    "order_value_inr": 5054,
+    "currency": "INR",
+    "price_basis": "Distributor_Billing_Price_INR",
+    "confirmation_status": "CONFIRMED_BY_RETAILER",
+    "confirmation_utterance": "Haan, confirm kar dijiye.",
+    "stock_snapshot_date": "2026-11-20",
+    "allocation": "Reserved against snapshot; final allocation by distributor DMS",
+    "discount_applied_inr": 0
+   },
+   "events": []
+  }
+ },
+ {
+  "id": "RX16",
+  "name": "\"Pichhli baar jitna\" for one product adds only that product",
+  "rid": "R042",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Only Saffola Gold 1 litre added, at last quantity",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "Namaste! Main Marico ki AI sales assistant Asha bol rahi hoon. Kya meri baat Sharma General Store ke Ramesh Sharma ji se ho rahi hai? Parachute aur Saffola ke order ke liye do minute chahiye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Haan."
+   },
+   {
+    "who": "agent",
+    "text": "Dhanyavaad Sharma ji! Pichhli baar aapne Parachute 500 ml ke 12 pieces aur 200 ml ke 8 pieces liye the, 11 din pehle. Is baar kitna bhejun?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Saffola Gold 1 litre bhi chahiye."
+   },
+   {
+    "who": "agent",
+    "text": "Saffola Gold 1 litre pouch ke kitne pieces bhejun? Pichhli baar 7 liye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Pichhli baar jitna."
+   },
+   {
+    "who": "agent",
+    "text": "Theek hai, Saffola Gold 1 litre pouch ke 7 pieces note kar liya. Aur kuch chahiye?",
+    "lang": "hi"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R042-01",
+   "retailer_id": "R042",
+   "distributor_id": "D001",
+   "outcome": "IN_PROGRESS",
+   "identity_verified": true,
+   "order": null,
+   "events": []
+  }
+ },
+ {
+  "id": "RX17",
+  "name": "Box size not known: asks for pieces, never guesses",
+  "rid": "R042",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Nothing booked while pieces unknown",
+    "pass": true
+   },
+   {
+    "check": "Asks for pieces with last order as a hint (no repeat of the box question)",
+    "pass": true
+   },
+   {
+    "check": "Booked 24 pieces once told",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "Namaste! Main Marico ki AI sales assistant Asha bol rahi hoon. Kya meri baat Sharma General Store ke Ramesh Sharma ji se ho rahi hai? Parachute aur Saffola ke order ke liye do minute chahiye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Haan."
+   },
+   {
+    "who": "agent",
+    "text": "Dhanyavaad Sharma ji! Pichhli baar aapne Parachute 500 ml ke 12 pieces aur 200 ml ke 8 pieces liye the, 11 din pehle. Is baar kitna bhejun?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Parachute 500 ml ke 2 box bhej do."
+   },
+   {
+    "who": "agent",
+    "text": "2 box mein kitne pieces honge? Billing piece mein hoti hai aur Parachute 500 ml ka box conversion mere paas confirm nahi hai, isliye pieces mein bata dijiye.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Pata nahi."
+   },
+   {
+    "who": "agent",
+    "text": "Koi baat nahi. Parachute 500 ml ke kitne pieces bhejun? Pichhli baar 12 liye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "24."
+   },
+   {
+    "who": "agent",
+    "text": "Theek hai, Parachute 500 ml ke 24 pieces note kar liya. Aur kuch chahiye?",
+    "lang": "hi"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R042-01",
+   "retailer_id": "R042",
+   "distributor_id": "D001",
+   "outcome": "IN_PROGRESS",
+   "identity_verified": true,
+   "order": null,
+   "events": []
+  }
+ },
+ {
+  "id": "RX18",
+  "name": "Owner away, said in English: no account data shared",
+  "rid": "R042",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Identity not verified, account not opened",
+    "pass": true
+   },
+   {
+    "check": "Callback booked",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "Namaste! Main Marico ki AI sales assistant Asha bol rahi hoon. Kya meri baat Sharma General Store ke Ramesh Sharma ji se ho rahi hai? Parachute aur Saffola ke order ke liye do minute chahiye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "He is not at the shop right now."
+   },
+   {
+    "who": "agent",
+    "text": "No problem. I'll call again today at 5 PM to speak with Sharma ji. Thank you!",
+    "lang": "en"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R042-01",
+   "retailer_id": "R042",
+   "distributor_id": "D001",
+   "outcome": "CALLBACK_SCHEDULED",
+   "identity_verified": false,
+   "order": null,
+   "events": [
+    {
+     "type": "CALLBACK_SCHEDULED",
+     "when": "2026-11-20T17:00",
+     "reason": "Owner not available",
+     "said": "He is not at the shop right now."
+    },
+    {
+     "type": "OWNER_UNAVAILABLE",
+     "note": "No account data disclosed"
+    }
+   ]
+  }
+ },
+ {
+  "id": "RX19",
+  "name": "\"Baaki baad mein bhej dena\" splits the order (not a callback)",
+  "rid": "R042",
+  "pass": true,
+  "checks": [
+   {
+    "check": "13 available pieces booked",
+    "pass": true
+   },
+   {
+    "check": "Follow-up for the other 7",
+    "pass": true
+   },
+   {
+    "check": "Call still open",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "Namaste! Main Marico ki AI sales assistant Asha bol rahi hoon. Kya meri baat Sharma General Store ke Ramesh Sharma ji se ho rahi hai? Parachute aur Saffola ke order ke liye do minute chahiye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Haan."
+   },
+   {
+    "who": "agent",
+    "text": "Dhanyavaad Sharma ji! Pichhli baar aapne Parachute 500 ml ke 12 pieces aur 200 ml ke 8 pieces liye the, 11 din pehle. Is baar kitna bhejun?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Saffola Gold 1 litre ke 20."
+   },
+   {
+    "who": "agent",
+    "text": "Saffola Gold 1 litre pouch ke abhi distributor ke paas sirf 13 pieces hain. Abhi 13 bhej doon aur baaki 7 ke liye follow-up rakhun, ya quantity badalni hai?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Haan, baaki baad mein bhej dena."
+   },
+   {
+    "who": "agent",
+    "text": "Theek hai, Saffola Gold 1 litre pouch ke 13 pieces note kar liye aur baaki 7 ke liye follow-up rakh diya. Aur kuch chahiye?",
+    "lang": "hi"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R042-01",
+   "retailer_id": "R042",
+   "distributor_id": "D001",
+   "outcome": "IN_PROGRESS",
+   "identity_verified": true,
+   "order": null,
+   "events": [
+    {
+     "type": "BACKORDER_FOLLOWUP",
+     "sku_id": "P006",
+     "quantity": 7,
+     "note": "Balance to follow when distributor restocks"
+    }
+   ]
+  }
+ },
+ {
+  "id": "RX20",
+  "name": "Complaint in English is logged, not booked as an order",
+  "rid": "R042",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Complaint logged",
+    "pass": true
+   },
+   {
+    "check": "Nothing added to the order",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "Namaste! Main Marico ki AI sales assistant Asha bol rahi hoon. Kya meri baat Sharma General Store ke Ramesh Sharma ji se ho rahi hai? Parachute aur Saffola ke order ke liye do minute chahiye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Yes, speaking."
+   },
+   {
+    "who": "agent",
+    "text": "Dhanyavaad Sharma ji! Pichhli baar aapne Parachute 500 ml ke 12 pieces aur 200 ml ke 8 pieces liye the, 11 din pehle. Is baar kitna bhejun?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "The last order came wrong."
+   },
+   {
+    "who": "agent",
+    "text": "I'm sorry about that, Sharma ji; it shouldn't have happened. Which product was wrong, and by how much?",
+    "lang": "en"
+   },
+   {
+    "who": "retailer",
+    "text": "Parachute 200 ml was 5 pieces short."
+   },
+   {
+    "who": "agent",
+    "text": "Thank you. I've logged complaint CMP-R042-01 and sent it to the area sales officer, who will contact you. Would you also like to place today's order?",
+    "lang": "en"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R042-01",
+   "retailer_id": "R042",
+   "distributor_id": "D001",
+   "outcome": "IN_PROGRESS",
+   "identity_verified": true,
+   "order": null,
+   "events": [
+    {
+     "type": "COMPLAINT",
+     "ticket": "CMP-R042-01",
+     "category": "Previous order - wrong quantity/item",
+     "details": "Parachute 200 ml was 5 pieces short.",
+     "sku_id": "P002",
+     "last_order_date": "2026-11-09"
+    },
+    {
+     "type": "HUMAN_ESCALATION",
+     "reason": "Complaint routed to area sales officer",
+     "ticket": "CMP-R042-01"
+    }
+   ]
+  }
+ },
+ {
   "id": "RX5",
   "name": "Planner skips do-not-call retailers",
   "rid": null,

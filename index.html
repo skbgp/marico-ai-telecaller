@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Marico AI Telecaller Prototype</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%231f3a5f'/%3E%3Cpath d='M5 3.2l1.9 1.9-1 1.5c.6 1.3 1.6 2.3 2.9 2.9l1.5-1 1.9 1.9-1.2 1.6C7.4 11.6 4.6 8.8 4.2 4.6z' fill='white'/%3E%3C/svg%3E">
 <style>
 body{margin:0;background:#f3f4f6;color:#222;font:14px/1.45 "Segoe UI",Roboto,Arial,sans-serif;overflow-x:hidden}
 *{box-sizing:border-box;min-width:0}
@@ -49,8 +50,23 @@ input,select{border:1px solid #b9bec7;border-radius:4px;padding:6px 8px;backgrou
 .msg{max-width:min(80%,600px);padding:7px 10px;border-radius:6px;border:1px solid #d6e2f3}
 .msg.a{background:#eef4fc;align-self:flex-start}
 .msg.r{background:#f6f6f6;border-color:#ddd;align-self:flex-end}
-.msg .by{display:block;font-size:11px;color:#666;font-weight:600}
-.msg .by .tl{font-weight:400;color:#8a8f98;font-family:Consolas,Menlo,monospace;font-size:10.5px;margin-left:6px}
+.msg .by{display:flex;gap:6px;align-items:baseline;font-size:11px;color:#555;font-weight:600}
+.msg .by .role{font-weight:400;color:#888}
+.msg .by .tm{margin-left:auto;padding-left:14px;font-weight:400;color:#999;font-variant-numeric:tabular-nums}
+.acts-note{align-self:flex-start;font-size:11.5px;color:#5f6b7a;margin:-3px 0 -3px 8px;line-height:1.55}
+.acts-note .w{color:#8a5a00}
+.msg.typing .dots i{display:inline-block;width:6px;height:6px;margin:6px 3px 2px 0;border-radius:50%;background:#7f97bd;animation:pulse 1s infinite}
+.msg.typing .dots i:nth-child(2){animation-delay:.15s}.msg.typing .dots i:nth-child(3){animation-delay:.3s}
+@keyframes pulse{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.endcard{align-self:stretch;border:1px solid #d5d9e0;border-left:3px solid #2b5797;background:#fafbfc;padding:7px 10px;font-size:13px;margin-top:4px}
+.endcard.placed{border-left-color:#1e7a34}
+.who .rid{font-size:12px;color:#777;font-weight:400}
+.callst{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#444;margin-top:3px}
+.callst b{font-variant-numeric:tabular-nums}
+.dot{width:8px;height:8px;border-radius:50%;background:#9aa1ab;display:inline-block}
+.dot.live{background:#1e7a34}.dot.ring{background:#e07b00;animation:blink 1s steps(2,start) infinite}
+@keyframes blink{50%{opacity:.25}}
+button.end{background:#b3261e;border-color:#b3261e;color:#fff}button.end:hover{background:#9a2019}
 .msg.sys{align-self:center;font-size:12px;color:#777;background:none;border:0}
 .msg.think{color:#777}
 .empty{margin:20px auto;max-width:460px;color:#444;font-size:13px}
@@ -63,6 +79,8 @@ form.say input{flex:1;font-size:15px}
 .chips{display:flex;gap:4px;flex-wrap:wrap;padding:0 12px 10px;font-size:12px;align-items:center}
 .chips span{color:#666;margin-right:2px}
 .chips button{font-size:12px;min-height:26px;padding:2px 8px;background:#fafafa}
+.chips .more{background:#fff;color:#2b5797;border-style:dashed}
+.allchips{flex-basis:100%;display:flex;flex-wrap:wrap;gap:4px;padding-top:5px;margin-top:2px;border-top:1px dashed #e1e4e8}
 .pad nav{display:flex;gap:2px;flex-wrap:wrap}
 .pad nav button{min-height:28px;padding:3px 9px;font-size:13px;border-radius:3px}
 .pad nav button[aria-selected=true]{background:#2b5797;border-color:#2b5797;color:#fff}
@@ -87,7 +105,7 @@ pre{font:12px/1.4 Consolas,Menlo,monospace;background:#f7f7f7;border:1px solid #
 .scroll{overflow-x:auto}
 .pass{color:#1e7a34;font-weight:600}.fail{color:#b3261e;font-weight:600}
 details summary{cursor:pointer}
-#pick{display:none;max-width:100%}
+#pick{display:none;max-width:100%;color:#222}
 @media (max-width:1100px){.grid{grid-template-columns:minmax(0,1fr) 340px}.queue{display:none}#pick{display:block}}
 @media (max-width:760px){.grid{display:block;height:auto}.call{min-height:70vh;margin-bottom:8px}.msg{max-width:92%}.log{min-height:50vh}}
 </style>
@@ -120,7 +138,7 @@ details summary{cursor:pointer}
     <div class="who" id="who"></div>
     <div class="log" id="log" aria-live="polite"></div>
     <form class="say" id="say" autocomplete="off">
-      <button type="button" id="mic" aria-pressed="false" aria-label="Speak as the retailer" title="Speak as the retailer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button type="button" id="mic" aria-pressed="false" aria-label="Talk as the retailer" title="Talk as the retailer. Hands-free: after Asha finishes speaking, the mic listens again. Click again to stop."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
       <input id="txt" placeholder="Retailer reply, e.g. Parachute 500 ml ke 15" aria-label="Retailer says">
       <button class="primary" id="send">Send</button>
     </form>
@@ -139,7 +157,7 @@ details summary{cursor:pointer}
     <div class="tab" id="t-tools" hidden></div>
     <div class="tab" id="t-json" hidden></div>
     <div class="tab" id="t-tests" hidden>
-      <div class="row"><button class="primary" id="runTests">Run tests</button><span class="why" id="testSum">CS01-CS19 from the workbook, SX1-SX6 surprise scenarios from the brief, RX1-RX10 extra checks. Uses the rule-based engine.</span></div>
+      <div class="row"><button class="primary" id="runTests">Run tests</button><span class="why" id="testSum">CS01-CS19 from the workbook, SX1-SX6 surprise scenarios from the brief, RX1-RX20 extra checks. Uses the rule-based engine.</span></div>
       <div id="testOut"></div>
     </div>
   </aside>
@@ -154,11 +172,40 @@ const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
 let DATA = null, idx = null, plan = [], sel = 'R042', conv = null, mode = 'rules', busy = false;
 let claudeMsgs = [], sample = null, tts = null, dict = null, listening = false, rec = null;
+let callState = 'idle', t0 = 0, tEnd = 0, timer = null, callToken = 0, speakTok = 0, agentSpeaking = false, handsFree = false, thinking = false, showAllChips = false;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const mmss = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+const elapsed = () => !t0 ? 0 : Math.max(0, ((callState === 'ended' ? tEnd : Date.now()) - t0) / 1000);
+const fmtWhen = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso || ''); if (!m) return iso || ''; const h = +m[4];
+  return `${+m[3]} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][+m[2] - 1]}, ${h % 12 || 12}:${m[5]} ${h >= 12 ? 'pm' : 'am'}`; };
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 
 const CHIPS = ['Haan bataiye', 'Parachute 500 ml ke 15 aur 200 ml ke 10', 'Saffola Gold 1 litre ke 20', '2 box bhej do', 'Nahi, 10 nahi 15 kar do', 'Bahut mehenga hai',
   'Bas itna hi', 'Haan, confirm kar dijiye', 'Thoda discount do', 'Can we speak in English?', 'Abhi busy hoon, 5 baje ke baad call karna',
   'Pichhli baar ka order galat aaya tha', 'Mujhe sales representative se baat karni hai', 'Dobara call mat karna', 'Stock full hai, Dabur scheme de raha hai'];
+
+// test replies that fit the point the call is at ({sur} = owner's surname, {q}/{q2} = last line's quantity and a changed one)
+const CH = {
+  identity: { hi: ['Haan, bol raha hoon', 'Abhi busy hoon, 5 baje ke baad call karna', '{sur} ji abhi dukaan pe nahi hain', 'Galat number hai', 'Aap kaun?', 'Can we speak in English?', 'Dobara call mat karna'],
+    en: ['Yes, speaking', 'I am busy, call me after 5', 'He is not at the shop right now', 'Wrong number', 'Who is this?', 'Hindi mein baat karo'] },
+  empty: { hi: ['Pichhli baar jitna hi bhej do', 'Parachute 500 ml ke 15 aur 200 ml ke 10', 'Saffola Gold 1 litre ke 20', '2 box bhej do', 'Bahut mehenga hai', 'Pichhli baar ka order galat aaya tha', 'Stock full hai, Dabur scheme de raha hai', 'Mujhe sales representative se baat karni hai'],
+    en: ['Same as last time', 'Parachute 500 ml, 15 pieces and 200 ml, 10 pieces', 'Saffola Gold 1 litre, 20 pieces', 'Too expensive', 'Last order came wrong', 'I want to talk to a sales representative'] },
+  cart: { hi: ['Bas itna hi', 'Nahi, {q} nahi {q2} kar do', 'Kitna hua total?', 'Saffola Gold 1 litre ke 20', 'Thoda discount do', 'Delivery kab tak hogi?'],
+    en: ["That's all", 'Make it {q2} instead of {q}', "What's the total?", 'Give me some discount', 'When will the delivery come?'] },
+  suggest: { hi: ['Haan, bhej do', 'Kitne ka hai?', 'Nahi, abhi nahi'], en: ['Yes, add it', 'How much is it?', 'No, not now'] },
+  stock: { hi: ['Haan, baaki baad mein bhej dena', 'Bas itna hi', 'Nahi, rehne do'], en: ['Yes, send the rest later', "That's all I need", 'No, leave it'] },
+  qty: { hi: ['10', 'Pichhli baar jitna', 'Thoda zyada bhej do'], en: ['10 pieces', 'Same as last time', 'A few more than last time'] },
+  box: { hi: ['Ek box mein 24 hote hain', 'Pata nahi', '24 pieces'], en: ['There are 24 in a box', "I don't know", '24 pieces'] },
+  boxConfirm: { hi: ['Haan, sahi hai', 'Nahi, 20 pieces'], en: ['Yes, correct', 'No, 20 pieces'] },
+  alt: { hi: ['Haan, woh bhej do', 'Nahi, rehne do'], en: ['Yes, send that', 'No, leave it'] },
+  bigConfirm: { hi: ['Haan, utna hi', 'Nahi, 20 hi bhejo'], en: ['Yes, that many', 'No, make it 20'] },
+  litreChoice: { hi: ['Ek jar', 'Pouch wala'], en: ['One jar', 'Pouches'] },
+  echo: { hi: ['Haan', 'Nahi'], en: ['Yes', 'No'] },
+  offerHuman: { hi: ['Haan, karwa do', 'Nahi'], en: ['Yes please', 'No'] },
+  complaint: { hi: ['Parachute 200 ml mein 5 pieces kam aaye the', 'Ek bottle leak thi'], en: ['Parachute 200 ml was 5 pieces short', 'One bottle was leaking'] },
+  finalQ: { hi: ['Haan, final kar do', 'Nahi, aur bhi chahiye'], en: ['Yes, finalise it', 'No, I need more'] },
+  readback: { hi: ['Haan, confirm kar dijiye', 'Nahi, {q} nahi {q2} kar do', 'Kitna hua total?', 'Order cancel kar do'], en: ['Yes, place the order', 'Make it {q2} instead of {q}', 'Cancel the order'] }
+};
 
 const LANGCODE = { Hindi: 'hi-IN', Gujarati: 'gu-IN', Marathi: 'mr-IN', Tamil: 'ta-IN', Telugu: 'te-IN', Kannada: 'kn-IN', Malayalam: 'ml-IN', Bengali: 'bn-IN', Odia: 'or-IN', Assamese: 'as-IN' };
 
@@ -176,36 +223,104 @@ function renderQueue() {
 }
 
 function selectRetailer(rid) {
+  callToken++; clearInterval(timer); callState = 'idle'; t0 = tEnd = 0; handsFree = false; thinking = false; busy = false;
   sel = rid; conv = null; claudeMsgs = []; stopVoice();
   renderQueue(); renderWho(); renderLog(); renderPad(); renderPlan(); renderTools(); renderJson();
 }
 
 function current() { return plan.find(p => p.rid === sel); }
 
+function phoneOf(r) { return String(r.Contact_Number_Synthetic || '').replace(/-/g, ' '); }
+function outcomeHead(rec) {
+  return ({ ORDER_CONFIRMED: 'Order placed', CALLBACK_SCHEDULED: 'Callback booked', WRONG_PARTY: 'Wrong person, nothing shared', DNC_SET: 'Do-not-call set',
+    ESCALATED: 'Handed to sales rep', COMPLAINT_LOGGED: 'Complaint logged', NO_ORDER_INSIGHT: 'No order, market note saved', NO_ORDER: 'No order today' })[rec.outcome] || 'Ended before an order';
+}
+function callStatusHtml() {
+  const r = current().retailer;
+  if (callState === 'dialling') return `<span class="dot ring"></span>Dialling ${esc(phoneOf(r))}...`;
+  if (callState === 'ringing') return '<span class="dot ring"></span>Ringing...';
+  if (callState === 'live') return `<span class="dot live"></span>Connected <b>${mmss(elapsed())}</b>${agentSpeaking ? ' | Asha speaking' : thinking ? ' | Asha thinking' : listening ? ' | Listening to retailer' : ''}`;
+  if (callState === 'ended') return `<span class="dot"></span>Call ended <b>${mmss(elapsed())}</b> | ${esc(outcomeHead(conv.S.record()))}`;
+  return '<span class="dot"></span>Not called yet';
+}
+function updateStatus() { const el = $('#callst'); if (el) el.innerHTML = callStatusHtml(); }
 function renderWho() {
   const p = current(), r = p.retailer;
-  const live = conv && !conv.S.closed;
-  $('#who').innerHTML = `<div><h2>${esc(r.Retailer_ID)} - ${esc(r.Retailer_Name)}</h2><div class="sub">Owner: ${esc(r.Owner_Name)} | ${esc(r.City)}, ${esc(r.State)} | Lang: ${esc(p.language)} | Segment ${esc(r.Segment.split(' ')[0])} | Distributor ${esc(r.Distributor_ID)} | Window ${esc(p.window)}</div></div>
-  <div class="acts"><button class="primary" id="start" ${live ? 'disabled' : ''}>${conv ? 'Restart call' : 'Start call'}</button><button id="hang" ${live ? '' : 'disabled'}>End call</button></div>`;
+  const live = ['dialling', 'ringing', 'live'].includes(callState);
+  $('#who').innerHTML = `<div><h2>${esc(r.Retailer_Name)} <span class="rid">${esc(r.Retailer_ID)}</span></h2><div class="sub">${esc(r.Owner_Name)} | ${esc(phoneOf(r))} | ${esc(r.City)}, ${esc(r.State)} | ${esc(p.language)} | Distributor ${esc(r.Distributor_ID)} | Calls ${esc(p.window)}</div>
+  <div class="callst" id="callst">${callStatusHtml()}</div></div>
+  <div class="acts"><button class="primary" id="start" ${live ? 'disabled' : ''}>${conv ? 'Call again' : 'Start call'}</button><button id="hang" class="${live ? 'end' : ''}" ${live ? '' : 'disabled'}>End call</button></div>`;
   $('#start').onclick = startCall; $('#hang').onclick = hangUp;
-  $('#txt').disabled = !live; $('#send').disabled = !live; $('#mic').disabled = !live || !(dict || SR);
+  const canTalk = callState === 'live' && conv && !conv.S.closed;
+  $('#txt').disabled = !canTalk; $('#send').disabled = !canTalk; $('#mic').disabled = !canTalk || !(dict || SR);
+  $('#mic').setAttribute('aria-pressed', String(!!(handsFree || listening)));
   if (!dict && !SR) $('#mic').title = 'Mic input needs Chrome or Edge. Type instead.';
+  renderChips();
 }
 
-function renderLog(extra) {
+function actNote(t) {
+  const a = t.args || {}, r = t.result || {}, nm = sku => (idx.products[sku] && idx.products[sku].Short) || sku;
+  switch (t.name) {
+    case 'verify_identity': return { text: 'Identity confirmed' };
+    case 'get_retailer_context': return { text: 'Account opened: last order ' + (r.cadence ? r.cadence.days_since_last_order : '?') + ' days ago' };
+    case 'check_stock': return { text: `Stock at distributor: ${nm(a.sku_id)}, ${r.available_units > 0 ? r.available_units + ' pcs' : 'out of stock'}`, warn: !(r.available_units > 15) };
+    case 'add_or_update_item':
+      if (r.error === 'EXCEEDS_STOCK') return { text: `${nm(a.sku_id)}: only ${r.available_units} in stock (asked ${r.requested})`, warn: true };
+      if (r.error === 'OUT_OF_STOCK') return { text: `${nm(a.sku_id)}: out of stock at distributor`, warn: true };
+      if (r.error) return { text: `${nm(a.sku_id)} not added (${r.error})`, warn: true };
+      return { text: r.action === 'updated' ? `${nm(a.sku_id)} changed to ${a.quantity}` : `Added ${nm(a.sku_id)} x ${a.quantity}` };
+    case 'remove_item': return { text: `Removed ${nm(a.sku_id)}` };
+    case 'get_order_summary': { const n = (r.lines || []).length; return { text: `Order read back: ${n} line${n === 1 ? '' : 's'}, ${inr(r.order_value_inr || 0)}` }; }
+    case 'confirm_order': return r.error ? { text: 'Confirm blocked: ' + (r.error === 'READBACK_REQUIRED' ? 'order must be read back first' : r.error), warn: true } : { text: `Order ${r.order_id} sent to distributor ${conv.S.dist}` };
+    case 'schedule_callback': return { text: 'Callback booked: ' + fmtWhen(a.when) };
+    case 'log_complaint': return { text: `Complaint ${r.ticket} logged for the area sales officer` };
+    case 'request_human': return { text: 'Sales rep callback requested' };
+    case 'set_do_not_call': return { text: 'Number marked do-not-call' };
+    case 'log_market_insight': return { text: 'Market note saved for the sales team' };
+    case 'log_discount_request': return { text: a.kind === 'credit_terms' ? 'Credit ask noted, nothing promised' : 'Discount ask noted, nothing given' };
+    case 'log_backorder': return { text: `Follow-up set: ${a.quantity} x ${nm(a.sku_id)} when stock comes` };
+    default: return null;
+  }
+}
+function actsHtml(acts) {
+  const notes = [];
+  acts.map(actNote).filter(Boolean).forEach(n => { if (!notes.length || notes[notes.length - 1].text !== n.text) notes.push(n); });
+  return notes.length ? `<div class="acts-note">${notes.map(n => `<div class="${n.warn ? 'w' : ''}">${n.warn ? '!' : '&#10003;'} ${esc(n.text)}</div>`).join('')}</div>` : '';
+}
+function endCard() {
+  const rec = conv.S.record(), o = rec.order, ev = k => rec.events.find(e => e.type === k) || {};
+  const body = ({
+    ORDER_CONFIRMED: () => `${o.order_id} | ${o.lines.length} line${o.lines.length === 1 ? '' : 's'} | ${inr(o.order_value_inr)} | sent to distributor ${rec.distributor_id}`,
+    CALLBACK_SCHEDULED: () => fmtWhen(ev('CALLBACK_SCHEDULED').when) + (rec.events.some(e => e.type === 'OWNER_UNAVAILABLE') ? ' | owner was not at the shop, nothing shared' : ''),
+    WRONG_PARTY: () => 'No account details were shared', DNC_SET: () => 'This number will not be called again',
+    ESCALATED: () => 'Area sales representative will call back', COMPLAINT_LOGGED: () => 'Ticket ' + (ev('COMPLAINT').ticket || '') + ' sent to the area sales officer',
+    NO_ORDER_INSIGHT: () => 'Retailer is stocked up; note saved for the sales team', NO_ORDER: () => ev('NO_ORDER').reason || ''
+  })[rec.outcome];
+  return `<div class="endcard ${rec.outcome === 'ORDER_CONFIRMED' ? 'placed' : ''}"><b>${esc(outcomeHead(rec))}</b> <span class="why">| call length ${mmss(elapsed())}</span>${body ? `<div>${esc(body())}</div>` : '<div class="why">Call was ended before an order was confirmed.</div>'}</div>`;
+}
+function renderLog() {
   const L = $('#log');
   if (!conv) {
     const p = current();
     const warn = p.decision === 'DO_NOT_CALL' ? '<p><b>Note:</b> this retailer has Do_Not_Call_Flag = Yes, so the planner will not call. You can still start a call to test.</p>' : p.decision === 'NOT_DUE' ? `<p><b>Note:</b> not due today (${esc(p.why[0])}).</p>` : '';
-    L.innerHTML = `<div class="empty"><h3>How to test</h3><ol><li>Pick a retailer from the list (sorted by call priority).</li><li>Click <b>Start call</b>. The agent speaks first.</li><li>You act as the retailer: type a reply, use the mic, or click one of the sample replies below.</li><li>Order, tool calls and final JSON are shown on the right.</li></ol>${warn}<p class="note">Current mode: ${mode === 'claude' ? 'LLM mode (Claude with tool calling, any of the 10 languages).' : 'Rule-based (Hinglish + English, works offline).'}${!sample ? ' LLM mode (Claude with tool calling) runs only inside Claude, so it is off on this page; its code is in index.html.' : ''} Mic: Chrome or Edge.</p></div>`;
+    L.innerHTML = `<div class="empty"><h3>How to try it</h3><ol><li>Pick a retailer on the left (highest priority first).</li><li>Click <b>Start call</b>. Asha dials, the retailer picks up and she speaks first.</li><li>Answer as the retailer: type, tap the mic and talk (Chrome or Edge), or click a test reply below the box.</li><li>The order builds on the right as she books each line; every function call is in the Tool log tab.</li></ol>${warn}<p class="note">Current mode: ${mode === 'claude' ? 'LLM mode (Claude with tool calling, any of the 10 languages).' : 'Rule-based (Hinglish + English, works offline).'}${!sample ? ' LLM mode (Claude with tool calling) runs only inside Claude, so it is off on this page; its code is in index.html.' : ''}</p></div>`;
     return;
   }
-  // "add_or_update_item, add_or_update_item" -> "add_or_update_item ×2"
-  function toolLabel(str) { const n = {}; String(str).split(/,\s*/).filter(Boolean).forEach(x => { n[x] = (n[x] || 0) + 1; }); return Object.entries(n).map(([k, c]) => c > 1 ? k + ' ×' + c : k).join(', '); }
-  L.innerHTML = conv.transcript.map(t => t.who === 'agent'
-    ? `<div class="msg a"><span class="by">Agent${t.tools ? ' <span class="tl">tools: ' + esc(toolLabel(t.tools)) + '</span>' : ''}</span>${esc(t.text)}</div>`
-    : t.who === 'sys' ? `<div class="msg sys">${esc(t.text)}</div>`
-    : `<div class="msg r"><span class="by">Retailer${t.confidence !== undefined && t.confidence < 1 ? ' (ASR conf ' + t.confidence + ')' : ''}</span>${esc(t.text)}</div>`).join('') + (extra || '');
+  const by = (name, role, at) => `<span class="by">${esc(name)}${role ? ` <span class="role">${esc(role)}</span>` : ''}<span class="tm">${at !== undefined ? mmss(at) : ''}</span></span>`;
+  const typing = '<div class="msg a typing">' + by('Asha', 'AI agent') + '<span class="dots"><i></i><i></i><i></i></span></div>';
+  let html = '', typed = false;
+  if (callState === 'dialling' || callState === 'ringing') html += `<div class="msg sys">${callState === 'dialling' ? 'Dialling ' + esc(phoneOf(current().retailer)) + '...' : 'Ringing...'}</div>`;
+  for (const t of conv.transcript) {
+    if (t.who === 'agent') {
+      if (t.acts && t.acts.length) html += actsHtml(t.acts);
+      if (t.hold) { html += typing; typed = true; break; }
+      html += `<div class="msg a">${by('Asha', 'AI agent', t.at)}${esc(t.text)}</div>`;
+    } else if (t.who === 'sys') html += `<div class="msg sys">${esc(t.text)}</div>`;
+    else html += `<div class="msg r">${by(t.name || 'Retailer', t.confidence !== undefined && t.confidence < 1 ? 'speech confidence ' + t.confidence : '', t.at)}${esc(t.text)}</div>`;
+  }
+  if (thinking && !typed) html += typing;
+  if (callState === 'ended') html += endCard();
+  L.innerHTML = html;
   L.scrollTop = L.scrollHeight;
 }
 
@@ -216,15 +331,16 @@ function renderPad() {
   const lines = (S.order ? S.order.lines.map(l => ({ sku: l.sku_id, name: S.idx.products[l.sku_id].Short, qty: l.quantity, price: l.unit_price_inr, source: l.source })) : S.cart.map(l => ({ sku: l.sku, name: l.name, qty: l.qty, price: l.price, source: l.source })));
   const total = lines.reduce((s, l) => s + l.qty * l.price, 0);
   const srcLbl = { cross_sell: 'cross-sell', agent_recommendation: 'suggested', agent_alternative: 'alternative', retailer_request: 'retailer' };
-  const evTxt = e => ({ CALLBACK_SCHEDULED: `Callback scheduled: ${e.when}`, COMPLAINT: `Complaint logged (${e.ticket})`, HUMAN_ESCALATION: `Escalated to human: ${e.reason || ''}`,
+  const evTxt = e => ({ CALLBACK_SCHEDULED: `Callback booked: ${fmtWhen(e.when)}`, COMPLAINT: `Complaint logged (${e.ticket})`, HUMAN_ESCALATION: `Escalated to human: ${e.reason || ''}`,
     DNC_SET: 'DNC flag set', WRONG_PARTY: 'Wrong person, no data shared', DISCOUNT_REQUEST: 'Discount asked, not given (sent to sales officer)',
     BACKORDER_FOLLOWUP: `Backorder follow-up: ${e.quantity} x ${e.sku_id}`, MARKET_INSIGHT: `Market insight: "${e.said}"`, ANOMALY_REVIEW: e.detail,
-    LOW_CONFIDENCE_ASR: 'Low ASR confidence, asked to repeat', NO_ORDER: `No order (${e.reason})`, SUGGESTION_DECLINED: 'Suggestion declined' })[e.type] || e.type;
-  $('#t-order').innerHTML = `<h3>Current order ${S.order ? '(' + esc(S.order.order_id) + ')' : '(draft)'}</h3>
+    LOW_CONFIDENCE_ASR: 'Low ASR confidence, asked to repeat', NO_ORDER: `No order (${e.reason})`, SUGGESTION_DECLINED: 'Suggestion declined',
+    OWNER_UNAVAILABLE: 'Owner not at the shop, nothing shared', OBJECTION: 'Price objection: margin explained, no discount' })[e.type] || e.type;
+  $('#t-order').innerHTML = `<h3>Current order ${S.order ? '(' + esc(S.order.order_id) + ')' : '(draft)'}</h3><p class="why" style="margin:0 0 6px">Distributor ${esc(S.dist)}, stock as of ${esc(idx.callDate)}. Lines appear as Asha books them.</p>
     <table><thead><tr><th>SKU</th><th>Product</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody>
     ${lines.length ? lines.map(l => `<tr><td>${esc(l.sku)}</td><td>${esc(l.name)}${l.source !== 'retailer_request' ? ` <span class="why">(${srcLbl[l.source] || esc(l.source)})</span>` : ''}</td><td class="n">${l.qty}</td><td class="n">${inr(l.price)}</td><td class="n">${inr(l.qty * l.price)}</td></tr>`).join('') : '<tr><td colspan="5" class="why">No items yet</td></tr>'}
     <tr class="tot"><td colspan="4">Total (billing price)</td><td class="n">${inr(total)}</td></tr></tbody></table>
-    <div class="status">Status: ${S.order ? '<span class="ok">CONFIRMED by retailer</span>' : rec.outcome !== 'IN_PROGRESS' ? esc(rec.outcome) : 'in progress'}</div>
+    <div class="status">Status: ${S.order ? '<span class="ok">CONFIRMED by retailer</span>' : rec.outcome !== 'IN_PROGRESS' ? esc(outcomeHead(rec)) : callState === 'live' ? 'call in progress' : 'not placed'}</div>
     ${rec.events.length ? `<b>Events</b><ul class="evs">${rec.events.map(e => `<li>${esc(evTxt(e))}</li>`).join('')}</ul>` : ''}`;
 }
 
@@ -254,20 +370,65 @@ function renderJson() {
   $('#copyJson').onclick = () => navigator.clipboard.writeText(txt).then(() => { $('#copied').textContent = 'copied'; }, () => { $('#copied').textContent = 'copy not allowed here, select manually'; });
 }
 
-function refresh(extra) { renderWho(); renderLog(extra); renderPad(); renderTools(); renderJson(); }
+function refresh() { renderWho(); renderLog(); renderPad(); renderTools(); renderJson(); }
 
 /* ---------------- speech ---------------- */
-function speak(text, lang) {
-  if (!$('#voice').checked || !text) return;
-  if (tts) { tts.speak(text, { language: lang === 'en' ? 'en' : undefined }).catch(() => {}); return; }
+// speak a reply; `then` runs once she has finished (used for hands-free listening and for hanging up after goodbye)
+function speak(text, lang, then) {
+  const tok = ++speakTok;
+  const fin = () => { if (tok !== speakTok) return; agentSpeaking = false; updateStatus(); if (then) then(); };
+  if (!$('#voice').checked || !text) { agentSpeaking = false; setTimeout(fin, 0); return; }
+  agentSpeaking = true; updateStatus();
+  if (tts) { Promise.resolve(tts.speak(text, { language: lang === 'en' ? 'en' : undefined })).then(fin, fin); return; }
   try {
-    const used = window.VoiceHi ? VoiceHi.say(text, lang) : '';
+    const used = window.VoiceHi ? VoiceHi.say(text, lang, fin) : (setTimeout(fin, 0), '');
     const vn = $('#voiceName');
     if (vn) vn.textContent = used ? '(' + used + ')' : '(no voice found in this browser)';
     if (vn && lang !== 'en' && window.VoiceHi && !VoiceHi.pickVoice('hi')) vn.textContent = '(no Hindi voice in this browser; use Chrome or Edge)';
-  } catch (e) { }
+  } catch (e) { fin(); }
 }
-function stopVoice() { try { tts && tts.stop(); } catch (e) { } try { speechSynthesis.cancel(); } catch (e) { } if (listening && dict) { dict.stop().catch(() => {}); } if (listening && rec) { try { rec.stop(); } catch (e) { } } }
+function hushAgent() { speakTok++; agentSpeaking = false; try { tts && tts.stop(); } catch (e) { } try { speechSynthesis.cancel(); } catch (e) { } }
+function stopListening() { if (listening && dict) dict.stop().catch(() => {}); if (rec) { try { rec.abort(); } catch (e) { } rec = null; } listening = false; }
+function stopVoice() { hushAgent(); stopListening(); }
+
+// one listening turn; in hands-free mode it is started again after every reply
+function startListening() {
+  if (!conv || conv.S.closed || callState !== 'live' || listening || busy) return;
+  if (dict) { dict.start().catch(err => { handsFree = false; conv.transcript.push({ who: 'sys', text: err && err.code === 'not_granted' ? 'Microphone not allowed; type instead.' : 'Could not start the microphone.' }); renderLog(); renderWho(); }); return; }
+  if (!SR) return;
+  const r = new SR(); rec = r;
+  r.lang = conv.S.lang === 'en' ? 'en-IN' : 'hi-IN'; r.interimResults = true; r.maxAlternatives = 1;
+  let heard = false;
+  r.onstart = () => { listening = true; $('#mic').setAttribute('aria-pressed', 'true'); updateStatus(); };
+  r.onend = () => { if (rec === r) rec = null; listening = false; $('#mic').setAttribute('aria-pressed', String(handsFree)); updateStatus(); };
+  r.onerror = e => {
+    listening = false;
+    if (e.error === 'aborted') return;
+    handsFree = false; $('#mic').setAttribute('aria-pressed', 'false');
+    conv.transcript.push({ who: 'sys', text: e.error === 'no-speech' ? 'No speech heard. Tap the mic to talk again.' : e.error === 'not-allowed' ? 'Microphone not allowed in this browser; type instead.' : 'Mic error: ' + e.error });
+    renderLog(); updateStatus();
+  };
+  r.onresult = e => {
+    const res = e.results[e.results.length - 1];
+    $('#txt').value = res[0].transcript;
+    if (res.isFinal && !heard) { heard = true; const c = res[0].confidence; retailerSays(res[0].transcript, c > 0 && c < 1 ? Math.round(c * 100) / 100 : undefined); }
+  };
+  try { r.start(); } catch (err) { }
+}
+
+// Indian ring-back tone (400 + 450 Hz, double ring), only when voice output is on
+function ring(ms) {
+  return new Promise(done => {
+    if (!$('#voice').checked) { setTimeout(done, ms * 0.6); return; }
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext, ac = new AC(), g = ac.createGain(), t = ac.currentTime;
+      g.gain.value = 0; g.connect(ac.destination);
+      [400, 450].forEach(f => { const o = ac.createOscillator(); o.frequency.value = f; o.connect(g); o.start(t); o.stop(t + ms / 1000); });
+      [[0, 0.4], [0.6, 1.0]].forEach(([a, b]) => { g.gain.setValueAtTime(0.05, t + a); g.gain.setValueAtTime(0, t + b); });
+      setTimeout(() => { try { ac.close(); } catch (e) { } done(); }, ms);
+    } catch (e) { setTimeout(done, ms); }
+  });
+}
 
 /* ---------------- Claude mode ---------------- */
 const TOOL_SPECS = [
@@ -320,57 +481,116 @@ Reply with only the words Asha says next.`;
 async function claudeTurn(userText) {
   claudeMsgs.push({ role: 'user', content: userText });
   conv.turnTools = [];
-  const thinking = '<div class="msg a think"><span class="by">Agent</span>thinking...</div>';
-  renderLog(thinking);
+  const mark = conv.S.toolLog.length, tok = callToken;
+  thinking = true; renderLog(); updateStatus();
   try {
     const res = await sample(claudeMsgs, { tools: claudeTools(), modelTier: 'default', cache: false });
+    if (tok !== callToken) return;
     const text = String(res.text || '').trim() || '…';
     claudeMsgs.push({ role: 'assistant', content: text });
-    conv.transcript.push({ who: 'agent', text, tools: conv.turnTools.join(', ') });
-    if (conv.S.T && conv.S.closed) conv.stage = 'closed';
-    speak(text, /[a-z]/i.test(text) && !/\b(hai|ji|kya|aap|main|nahi|haan)\b/i.test(text) ? 'en' : 'hi');
+    conv.transcript.push({ who: 'agent', text, tools: conv.turnTools.join(', '), acts: conv.S.toolLog.slice(mark).filter(t => t.name !== 'end_call'), at: elapsed() });
+    thinking = false; refresh();
+    afterReply(text, /[a-z]/i.test(text) && !/\b(hai|ji|kya|aap|main|nahi|haan)\b/i.test(text) ? 'en' : 'hi');
   } catch (e) {
+    if (tok !== callToken) return;
     conv.transcript.push({ who: 'sys', text: e && e.code === 'not_granted' ? 'Claude was not allowed on this page. Switched to Offline rules.' : 'Claude did not answer (' + (e && (e.code || e.message) || 'error') + '). Try again, or switch to Offline rules.' });
     if (e && e.code === 'not_granted') setMode('rules', true);
-  }
+  } finally { thinking = false; }
   refresh();
 }
 
 /* ---------------- call flow ---------------- */
 async function startCall() {
-  stopVoice();
+  stopVoice(); handsFree = false; busy = false; thinking = false;
+  const tok = ++callToken;
   conv = new AgentCore.Conversation(idx, sel);
-  conv.mode = mode;
-  if (mode === 'claude' && sample) {
-    claudeMsgs = [];
-    refresh();
-    await claudeTurn(brief() + '\n\nThe call has just connected. Say your opening line.');
-  } else {
-    const out = conv.start();
-    refresh(); speak(out.text, out.lang);
-  }
+  conv.mode = mode; claudeMsgs = [];
+  clearInterval(timer); t0 = tEnd = 0; callState = 'dialling';
+  refresh();
+  await sleep(900); if (tok !== callToken) return;
+  callState = 'ringing'; renderWho(); renderLog();
+  await ring(2000); if (tok !== callToken) return;
+  callState = 'live'; t0 = Date.now(); timer = setInterval(updateStatus, 1000);
+  if (mode === 'claude' && sample) { refresh(); await claudeTurn(brief() + '\n\nThe call has just connected. Say your opening line.'); return; }
+  const out = conv.start();
+  conv.transcript[conv.transcript.length - 1].at = 0;
+  refresh(); afterReply(out.text, out.lang);
+}
+// after Asha's line: if the call is over, hang up once she has said goodbye; in hands-free mode, listen again
+function afterReply(text, lang) {
+  const tok = callToken;
+  speak(text, lang, () => {
+    if (tok !== callToken || !conv) return;
+    if (conv.S.closed) { endCall(); return; }
+    if (handsFree) startListening();
+  });
+}
+function endCall() {
+  if (callState === 'ended') return;
+  callState = 'ended'; tEnd = Date.now(); clearInterval(timer); handsFree = false; stopListening();
+  refresh();
 }
 function hangUp() {
   if (!conv) return;
-  if (!conv.S.closed) { conv.S.T.end_call({ outcome: conv.S.outcome || 'RETAILER_HUNG_UP' }); conv.transcript.push({ who: 'sys', text: 'Call ended.' }); }
-  stopVoice(); refresh();
+  const notConnected = callState === 'dialling' || callState === 'ringing';
+  if (notConnected) { callToken++; t0 = Date.now(); }
+  if (!conv.S.closed) conv.S.T.end_call({ outcome: conv.S.outcome || (notConnected ? 'NOT_CONNECTED' : 'RETAILER_HUNG_UP') });
+  stopVoice(); endCall();
 }
+// a short pause before each reply, like a person on a call; longer replies take a little longer
+const thinkMs = txt => 550 + Math.min(650, String(txt || '').length * 3);
 async function retailerSays(text, confidence) {
   text = String(text || '').trim();
-  if (!text || !conv || conv.S.closed || busy) return;
+  if (!text || !conv || conv.S.closed || busy || callState !== 'live') return;
   busy = true; $('#txt').value = '';
+  hushAgent();   // the retailer talks over Asha: she stops
+  stopListening();
+  const tok = callToken;
   try {
     if (mode === 'claude' && sample) {
-      conv.transcript.push({ who: 'retailer', text, confidence });
+      conv.transcript.push({ who: 'retailer', text, confidence, at: elapsed(), name: conv.S.identityVerified ? current().retailer.Owner_Name : undefined });
       await claudeTurn('Retailer: ' + text + (confidence !== undefined && confidence < 0.6 ? ' [unclear audio]' : ''));
-    } else {
-      const out = conv.hear(text, { confidence });
-      const tools = out.tools.map(t => t.name).filter(n => n !== 'end_call');
-      const last = conv.transcript[conv.transcript.length - 1];
-      if (last && last.who === 'agent' && tools.length) last.tools = tools.join(', ');
-      refresh(); speak(out.text, out.lang);
+      return;
     }
-  } finally { busy = false; }
+    const before = conv.transcript.length;
+    const out = conv.hear(text, { confidence });
+    const fresh = conv.transcript.slice(before);
+    fresh.forEach(t => { if (t.who === 'retailer') { t.at = elapsed(); if (conv.S.identityVerified) t.name = current().retailer.Owner_Name; } else t.hold = true; });
+    const reply = fresh.filter(t => t.who === 'agent').slice(-1)[0];
+    if (reply) { reply.acts = out.tools.filter(t => t.name !== 'end_call'); reply.tools = reply.acts.map(t => t.name).join(', '); }
+    thinking = true; renderLog(); renderChips(); updateStatus(); renderPad(); renderTools(); renderJson();   // the order panel updates as lines are booked
+    await sleep(thinkMs(out.text));
+    if (tok !== callToken) return;
+    fresh.forEach(t => { if (t.hold) { delete t.hold; t.at = elapsed(); } });
+    thinking = false;
+    refresh();
+    afterReply(out.text, out.lang);
+  } finally { busy = false; if (tok === callToken) { thinking = false; renderWho(); } }
+}
+
+/* ---------------- test replies ---------------- */
+function chipList() {
+  if (!conv || callState !== 'live' || conv.S.closed) return null;
+  const en = conv.S.lang === 'en', P = conv.pending && conv.pending.type;
+  let k = conv.stage === 'identity' ? 'identity' : conv.stage === 'readback' ? 'readback' : P && CH[P] ? P : conv.S.cart.length ? 'cart' : 'empty';
+  if (k === 'size') {
+    const opts = conv.pending.options.map(s => idx.products[s].Short.replace(/^(Parachute|Saffola|Nihar|Livon|Set Wet) /, ''));
+    return opts.map(o => en ? o : o + ' wala');
+  }
+  const last = conv.S.cart[conv.S.cart.length - 1], q = last ? last.qty : 10, q2 = q + 5;
+  const sur = current().retailer.Owner_Name.split(' ').slice(-1)[0];
+  return CH[k][en ? 'en' : 'hi'].filter(c => (last || !/\{q/.test(c)) && !(conv.complained && /galat aaya|came wrong/.test(c))).map(c => c.replace(/\{sur\}/g, sur).replace(/\{q2\}/g, q2).replace(/\{q\}/g, q));
+}
+function renderChips() {
+  const el = $('#chips'), list = chipList();
+  if (!list) {
+    el.innerHTML = '<span>' + (callState === 'ended' ? 'Call ended. Click <b>Call again</b> or pick another retailer.' : callState === 'idle' ? 'Test replies show here once the call connects.' : 'Connecting...') + '</span>';
+    return;
+  }
+  const all = showAllChips ? CHIPS.filter(c => !list.includes(c)) : [];
+  el.innerHTML = '<span>Test replies:</span>' + list.map(c => `<button type="button" data-say="${esc(c)}">${esc(c)}</button>`).join('') +
+    `<button type="button" class="more" id="moreChips">${showAllChips ? 'Fewer' : 'More...'}</button>` +
+    (all.length ? '<div class="allchips">' + all.map(c => `<button type="button" data-say="${esc(c)}">${esc(c)}</button>`).join('') + '</div>' : '');
 }
 
 function setMode(m, quiet) {
@@ -393,8 +613,11 @@ $('#list').addEventListener('click', e => { const b = e.target.closest('button[d
 $('#pick').addEventListener('change', e => selectRetailer(e.target.value));
 $('#q').addEventListener('input', renderQueue);
 $('#say').addEventListener('submit', e => { e.preventDefault(); retailerSays($('#txt').value); });
-$('#chips').innerHTML = '<span>Sample replies:</span>' + CHIPS.map(c => `<button type="button">${esc(c)}</button>`).join('');
-$('#chips').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { if (!conv || conv.S.closed) return; retailerSays(b.textContent); } });
+$('#chips').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'moreChips') { showAllChips = !showAllChips; renderChips(); return; }
+  if (b.dataset.say) retailerSays(b.dataset.say);
+});
 $('#m-claude').onclick = () => { if (sample) setMode('claude'); };
 $('#m-rules').onclick = () => setMode('rules');
 document.querySelectorAll('.pad nav button').forEach(b => b.onclick = () => {
@@ -403,29 +626,11 @@ document.querySelectorAll('.pad nav button').forEach(b => b.onclick = () => {
 });
 $('#runTests').onclick = runTests;
 $('#mic').onclick = () => {
-  if (!conv || conv.S.closed) return;
-  if (dict) {
-    if (listening) { dict.stop().catch(() => {}); return; }
-    stopVoice();
-    dict.start().catch(err => { conv.transcript.push({ who: 'sys', text: err && err.code === 'not_granted' ? 'Microphone not allowed; type instead.' : 'Could not start the microphone.' }); renderLog(); });
-    return;
-  }
-  if (!SR) return;
-  if (listening && rec) { rec.stop(); return; }
-  stopVoice();
-  // browser speech recognition (Chrome / Edge): Hindi by default, English once the call has switched
-  rec = new SR();
-  rec.lang = conv.S.lang === 'en' ? 'en-IN' : 'hi-IN';
-  rec.interimResults = true; rec.maxAlternatives = 1;
-  rec.onstart = () => { listening = true; $('#mic').setAttribute('aria-pressed', 'true'); };
-  rec.onend = () => { listening = false; $('#mic').setAttribute('aria-pressed', 'false'); };
-  rec.onerror = e => { listening = false; $('#mic').setAttribute('aria-pressed', 'false'); conv.transcript.push({ who: 'sys', text: e.error === 'not-allowed' ? 'Microphone not allowed in this view; type instead.' : e.error === 'no-speech' ? 'No speech heard; try again.' : 'Mic error: ' + e.error }); renderLog(); };
-  rec.onresult = e => {
-    const r = e.results[e.results.length - 1];
-    $('#txt').value = r[0].transcript;
-    if (r.isFinal) { const c = r[0].confidence; retailerSays(r[0].transcript, c > 0 && c < 1 ? Math.round(c * 100) / 100 : undefined); }
-  };
-  try { rec.start(); } catch (err) { conv.transcript.push({ who: 'sys', text: 'Could not start the microphone.' }); renderLog(); }
+  if (!conv || conv.S.closed || callState !== 'live') return;
+  if (handsFree || listening) { handsFree = false; stopListening(); $('#mic').setAttribute('aria-pressed', 'false'); updateStatus(); return; }
+  handsFree = true; $('#mic').setAttribute('aria-pressed', 'true');
+  hushAgent();   // barge-in: Asha stops talking when the retailer starts
+  startListening();
 };
 
 fetch('marico_data.json').then(r => r.json()).then(d => {
@@ -441,7 +646,7 @@ if (window.claude && window.claude.use) {
     if (!d) return;
     d.onPartial(({ text }) => { $('#txt').value = text; });
     d.onFinal(({ text }) => { retailerSays(text); });
-    d.onState(({ state }) => { listening = state === 'listening'; $('#mic').setAttribute('aria-pressed', listening); });
+    d.onState(({ state }) => { listening = state === 'listening'; $('#mic').setAttribute('aria-pressed', String(listening || handsFree)); updateStatus(); });
     if (conv) renderWho();
   });
 } else { $('#m-claude').disabled = true; }

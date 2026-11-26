@@ -243,7 +243,8 @@
     pachaas: 50, fifty: 50, sau: 100, hundred: 100 };
   delete NUMW.a;
   const VERB_BEFORE_DO = new Set(['bhej', 'de', 'kar', 'rakh', 'likh', 'daal', 'hata', 'bata', 'laga', 'bana', 'bol', 'sun', 'dikha',
-    'mangwa', 'bhijwa', 'chhod', 'jod', 'add', 'cancel', 'confirm', 'book', 'place', 'mila', 'utha', 'i', 'you', 'we', 'they', 'what', 'how']);
+    'mangwa', 'bhijwa', 'chhod', 'jod', 'add', 'cancel', 'confirm', 'book', 'place', 'mila', 'utha', 'i', 'you', 'we', 'they', 'what', 'how',
+    'rehne', 'rahne', 'jane', 'jaane', 'hone', 'dene', 'lene', 'karne', 'aane', 'sochne', 'dekhne']);
   const U_PIECE = new Set(['piece', 'pieces', 'pc', 'pcs', 'peice', 'peices', 'nag', 'bottle', 'bottles', 'botal', 'pouch', 'pouches',
     'packet', 'packets', 'pack', 'packs', 'jar', 'jars', 'can', 'cans', 'tube', 'tubes', 'unit', 'units', 'qty']);
   const U_BOX = new Set(['box', 'boxes', 'dabba', 'dabbe', 'dibba', 'dibbe', 'carton', 'cartons', 'case', 'cases', 'peti', 'petiyan', 'cartoon', 'crate']);
@@ -266,7 +267,7 @@
   const KW = {
     affirm: ['haan', 'ha', 'haa', 'han', 'hanji', 'ji haan', 'jee haan', 'ji boliye', 'ji bataiye', 'speaking', 'bol raha', 'bol rahi', 'main hi hoon', 'theek hai', 'thik hai', 'theek', 'ok', 'okay', 'okk', 'yes', 'yeah', 'yep',
       'sure', 'confirm', 'kar do', 'kar dijiye', 'chalega', 'bilkul', 'sahi hai', 'correct', 'right', 'done', 'place it', 'go ahead', 'bataiye', 'boliye', 'haanji'],
-    deny: ['nahi', 'nahin', 'na', 'no', 'nope', 'mat', 'rehne do', 'rahne do', 'not now', "don't", 'dont', 'abhi nahi'],
+    deny: ['nahi', 'nahin', 'na', 'no', 'nope', 'mat', 'rehne do', 'rahne do', 'rehne dijiye', 'rahne dijiye', 'jane do', 'jaane do', 'chhodo', 'chhod do', 'leave it', 'skip it', 'not now', "don't", 'dont', 'abhi nahi'],
     done: ['bas', 'bas itna', "that's all", 'thats all', 'that is all', 'itna hi', 'aur kuch nahi', 'nothing else', 'bas yahi', 'enough', 'itna kaafi', 'no more'],
     busy: ['busy', 'vyast', 'baad mein', 'baad me', 'later', 'call back', 'callback', 'phir se call', 'phir call', 'shaam ko call', 'abhi time nahi',
       'time nahi hai', 'customer hai', 'grahak hai', 'call me after', 'call after'],
@@ -278,14 +279,15 @@
     dnc: ['call mat karna', 'call mat karo', 'phone mat karna', 'phone mat karo', 'dobara call', 'do not call', "don't call", 'dont call', 'never call',
       'call band karo', 'mat kiya karo call', 'stop calling'],
     complaint: ['galat', 'wrong quantity', 'wrong item', 'wrong product', 'kam aaya', 'kam aayi', 'kam aaye', 'short aaya', 'short supply', 'damaged', 'toota',
-      'tuta', 'leak', 'complaint', 'shikayat', 'galti', 'issue', 'problem', 'expired', 'missing', 'arrived with', 'delivered wrong'],
+      'tuta', 'leak', 'complaint', 'shikayat', 'galti', 'issue', 'problem', 'expired', 'missing', 'arrived with', 'delivered wrong',
+      'came wrong', 'was wrong', 'wrong order', 'were short', 'was short', 'pieces short', 'came short', 'less pieces', 'leaking', 'broken'],
     discount: ['discount', 'chhoot', 'chhut', 'scheme do', 'extra margin', 'margin badha', 'rate kam', 'sasta', 'extra off', 'better rate', 'kuch kam karo',
       'offer do', 'free do'],
     wrongParty: ['wrong number', 'galat number', 'main nahi hoon', 'main woh nahi', 'yeh unka number nahi', 'ye unka number nahi', 'unka number nahi', 'this is not', "i'm not", 'i am not', 'koi aur',
       'not the owner', 'no one by that name', 'yahan koi', 'is naam ka koi'],
     vague: ['few more', 'a few', 'some more', 'thoda zyada', 'thode zyada', 'thode aur', 'thoda aur', 'kuch zyada', 'kuch aur', 'jyada bhej', 'zyada bhej', 'more than last'],
     sameAsLast: ['pichhli baar jitna', 'pichli baar jitna', 'same as last', 'wahi bhej', 'vahi bhej', 'same order', 'last time wala', 'jaisa pichhli baar', 'repeat order', 'repeat last'],
-    price: ['rate', 'price', 'kitne ka', 'kitne ki', 'mrp', 'cost', 'daam', 'kimat', 'keemat', 'margin'],
+    price: ['rate', 'price', 'kitne ka', 'kitne ki', 'mrp', 'cost', 'daam', 'kimat', 'keemat', 'margin', 'how much is it', 'how much is this', 'how much does it', 'how much for'],
     sizes: ['kaunse size', 'kaun se size', 'which sizes', 'what sizes', 'sizes', 'size kya'],
     competitor: ['dabur', 'bajaj', 'emami', 'fortune', 'dhara', 'navratna', 'clinic plus', 'patanjali', 'keo karpin', 'fogg', 'axe', 'quaker', 'kellogg',
       'gemini', 'sundrop', 'competitor', 'dusri company', 'doosri company', 'other company', 'scheme chal', 'offer chal', 'free de rahe', 'promotion', 'bonus'],
@@ -297,6 +299,10 @@
     stockQ: ['available hai', 'available h', 'stock hai kya', 'stock me hai', 'stock mein hai', 'milega kya', 'mil jayega', 'is it available', 'in stock', 'do you have', 'hai kya stock'],
     terms: ['delivery', 'kab aayega', 'kab aayegi', 'kab tak', 'kab milega', 'payment', 'udhaar', 'udhar', 'credit', 'paise baad'],
     whoAreYou: ['kaun bol', 'who is this', 'aap kaun', 'robot', 'are you a bot', 'machine ho', 'computer ho', 'real person ho', 'insaan ho'],
+    totalQ: ['kitna hua', 'total kitna', 'total kya', 'kul kitna', 'bill kitna', 'kitne ka hua', 'kitne ki hui', 'total batao', 'total bata', 'what is the total', "what's the total", 'whats the total', 'total amount', 'how much total', 'total how much'],
+    ownerAway: ['nahi hain', 'nahin hain', 'bahar gaye', 'bahar hain', 'ghar gaye', 'ghar pe hain', 'dukaan pe nahi', 'dukan pe nahi', 'dukaan par nahi', 'dukan par nahi', 'shop pe nahi', 'not here', 'not available', 'is out', 'not in the shop',
+      'abhi nahi hain', 'unka beta', 'unki beti', 'main unka', 'main unki', 'unka bhai', 'staff hoon', 'baad mein aayenge', 'baad me aayenge',
+      'not at the shop', 'not at shop', 'not in shop', 'he is out', 'she is out', 'not there', 'out of station', 'gone out', 'went out', 'he is not here', 'she is not here'],
     repeatLine: ['dobara bolo', 'phir se bolo', 'fir se bolo', 'kya bola', 'kya kaha', 'say again', 'say that again', 'repeat that', 'samjha nahi', 'samajh nahi aaya'],
     change: ['kar do', 'kar dijiye', 'change', 'badal', 'instead', 'make it', 'update', 'balki', 'not ', ' nahi '],
   };
@@ -342,12 +348,15 @@
   function intents(norm) {
     const I = {};
     Object.keys(KW).forEach(k => { I[k] = has(norm, KW[k]); });
+    I.affirm = has(norm.replace(/\bright (now|away)\b/g, ' '), KW.affirm);   // "he is not here right now" is not a yes
     // refine overlapping cues
     if (I.notInterested || I.dnc) I.deny = true;
     if (I.dnc) I.busy = false;
     if (/\bbas\b/.test(norm) && /\b(\d+|ek|do|teen)\b/.test(norm) && !/bas itna|bas yahi|bas ho gaya|bas\s*$/.test(norm)) I.done = false;
     I.time = parseTime(norm);
     if (I.time && /call|phone|baat|baje|after|baad/.test(norm) && (I.busy || /call/.test(norm))) I.busy = true;
+    // "baaki baad mein bhej dena" / "send the rest later" is about delivery, not a callback
+    if (I.busy && /\b(bhej\w*|send|deliver\w*|baaki|rest|follow)\b/.test(norm) && !/\b(call|phone)\b/.test(norm)) I.busy = false;
     const toks = norm.split(' ');
     I.lang = langScore(toks);
     return I;
@@ -654,8 +663,19 @@
     stockNo: { hi: c => `Abhi ${c.item} distributor ke paas out of stock hai.${c.alt ? ' ' + c.alt + ' available hai.' : ''}`, en: c => `${c.item} is out of stock at your distributor right now.${c.alt ? ' ' + c.alt + ' is available.' : ''}` },
     terms: { hi: () => `Delivery aur payment aapke distributor ke normal schedule aur terms par hi hongi. Main alag se koi date ya credit promise nahi kar sakti; zarurat ho to sales officer se baat karwa deti hoon.`, en: () => `Delivery and payment follow your distributor's normal schedule and terms. I can't promise a separate date or credit; I can connect you to the sales officer if needed.` },
     whoAreYou: { hi: () => `Ji, main Marico ki AI sales assistant hoon, aapka order lene ke liye. Aap chahein to main kisi sales representative se aapki baat karwa sakti hoon.`, en: () => `Yes, I'm Marico's AI sales assistant, calling to take your order. If you prefer, I can arrange a call from a sales representative.` },
-    cancelled: { hi: () => `Theek hai, order cancel kar diya, kuch nahi bheja jayega. Dhanyavaad!`, en: () => `Okay, I've cancelled it; nothing will be sent. Thank you!` }
+    cancelled: { hi: () => `Theek hai, order cancel kar diya, kuch nahi bheja jayega. Dhanyavaad!`, en: () => `Okay, I've cancelled it; nothing will be sent. Thank you!` },
+    complaintAgain: { hi: c => `Ji, aapki shikayat ${c.ticket} pehle hi darj ho chuki hai, area sales officer aapse sampark karenge. Kya aaj ka order bhi le loon?`, en: c => `Yes, your complaint ${c.ticket} is already logged; the area sales officer will contact you. Shall I take today's order as well?` },
+    idAgain: { hi: c => lowerAfterComma(c.pre, `Kya meri baat ${c.shop} ke ${c.owner} ji se ho rahi hai?`), en: c => lowerAfterComma(c.pre, `Am I speaking with ${c.owner} of ${c.shop}?`) },
+    ownerAway: { hi: c => `Koi baat nahi. Main ${c.hon} se baad mein baat kar loongi, ${c.when} dobara call karungi. Dhanyavaad!`, en: c => `No problem. I'll call again ${c.when} to speak with ${c.hon}. Thank you!` },
+    runningTotal: { hi: c => `Abhi tak ${c.lines}, kul ${c.total}. Aur kuch chahiye?`, en: c => `So far: ${c.lines}, total ${c.total}. Anything else?` },
+    emptyTotal: { hi: () => `Abhi tak koi item note nahi hua. Bataiye, kya bhejun?`, en: () => `Nothing is noted yet. What should I send?` },
+    leadAgain: { hi: c => `Ji. Pichhli baar aapne ${c.lines} liye the. Is baar kitna bhejun?`, en: c => `Sure. Last time you took ${c.lines}. How much should I send this time?` },
+    finalQ: { hi: () => `Ji. Toh order final kar doon?`, en: () => `Sure. Shall I finalise the order then?` },
+    whatElse: { hi: () => `Ji bataiye, aur kya bhejun?`, en: () => `Sure, what else should I add?` },
+    shortAgain: { hi: c => `Maaf kijiye, ${c.item} ke abhi ${c.avail} pieces bhej doon, aur baaki ${c.rest} baad mein?`, en: c => `Sorry, shall I send ${c.avail} pieces of ${c.item} now, and the other ${c.rest} later?` }
   };
+  // "Maaf kijiye, " + "Kya ..." -> "Maaf kijiye, kya ..."
+  function lowerAfterComma(pre, q) { pre = pre || ''; return /, $/.test(pre) ? pre + q.charAt(0).toLowerCase() + q.slice(1) : pre + q; }
 
   function joinList(items, lang) {
     if (items.length <= 1) return items.join('');
@@ -664,11 +684,14 @@
   const qtyPhrase = (name, q, lang) => { const u = q === 1 ? 'piece' : 'pieces'; return lang === 'hi' ? `${name} ke ${q} ${u}` : `${q} ${u} of ${name}`; };
   // "Parachute 500 ml ke 12 aur 200 ml ke 8 pieces" - drop the repeated brand on consecutive lines
   function linesPhrase(list, lang) {
-    let prevBrand = null;
+    // only when both lines are the plain product: "Parachute Advansed Jasmine 200 ml ..., 200 ml ..." would sound like more Jasmine
+    let prevBrand = null, prevPlain = false;
+    const VARIANT = /Advansed|Gold|Active|Oats|Shanti|Coconut|Serum|Gel|Deo|Styler/;
     const parts = list.map(x => {
       const brand = (x.name.match(/^(Parachute|Saffola|Nihar|Livon|Set Wet)/) || [null])[0];
-      const nm = brand && brand === prevBrand && !/Advansed|Gold|Active|Oats|Shanti|Coconut|Serum|Gel|Deo|Styler/.test(x.name) ? x.name.replace(brand + ' ', '') : x.name;
-      prevBrand = brand;
+      const plain = !!brand && !VARIANT.test(x.name);
+      const nm = plain && brand === prevBrand && prevPlain ? x.name.replace(brand + ' ', '') : x.name;
+      prevBrand = brand; prevPlain = plain;
       return qtyPhrase(nm, x.qty, lang);
     });
     return joinList(parts, lang);
@@ -716,6 +739,12 @@
 
       // ---- global intents, any stage ----
       if (I.dnc) { this.S.T.set_do_not_call({ said: text }); return this.close('dnc', {}, 'DNC_SET'); }
+      if (this.stage === 'identity' && I.ownerAway && !/\b(main hi|mai hi|speaking|bol raha|bol rahi)\b/.test(norm)) {
+        const when = this.callbackWhen(I.time);
+        this.S.T.schedule_callback({ when: when.iso, reason: 'Owner not available', said: text });
+        this.S.events.push({ type: 'OWNER_UNAVAILABLE', note: 'No account data disclosed' });
+        return this.close('ownerAway', { when: when.say }, 'CALLBACK_SCHEDULED');
+      }
       const firstTok = norm.split(' ')[0];
       const startsNo = ['nahi', 'nahin', 'no', 'na', 'nope'].includes(firstTok);
       if (this.stage === 'identity' && (I.wrongParty || (startsNo && !I.busy) || (I.deny && !I.affirm && !I.busy) || / ji nahi hoon| nahi hoon\b/.test(' ' + norm))) {
@@ -740,10 +769,14 @@
           if (segs.length && hasQty) return this.handleItems(norm, I, text);
           return this.leadLines();
         }
-        return this.say(this.t('fallback'));
+        const hiL = this.S.lang === 'hi';
+        const pre = I.whoAreYou ? (hiL ? 'Main Asha hoon, Marico ki AI sales assistant. Aapke order ke liye call kiya hai. ' : "I'm Asha, Marico's AI sales assistant, calling about your order. ")
+          : I.toEnglish ? 'Sure. ' : I.toHindi ? 'Ji zaroor. ' : I.repeatLine ? '' : (hiL ? 'Maaf kijiye, ' : 'Sorry, ');
+        return this.say(this.t('idAgain', { pre, shop: this.S.r.Retailer_Name, owner: this.S.r.Owner_Name }));
       }
       if (this.pending && this.pending.type === 'complaint') return this.finishComplaint(text, norm);
       if (I.complaint && !this.complained) return this.startComplaint(text, norm);
+      if (I.complaint && this.complained && !this.segsHaveItems(norm)) { const ev = this.S.events.filter(e => e.type === 'COMPLAINT').slice(-1)[0]; return this.say(this.t('complaintAgain', { ticket: ev ? ev.ticket : '' })); }
       if (I.discount) {
         const sku = this.lastSku || (this.S.cart[0] && this.S.cart[0].sku);
         const p = sku && this.idx.products[sku];
@@ -793,6 +826,11 @@
         this.S.events.push({ type: 'NO_ORDER', reason: 'Retailer declined' });
         return this.close('notInterested', {}, 'NO_ORDER');
       }
+      if (I.totalQ && !this.segsHaveItems(norm)) {
+        if (!this.S.cart.length) return this.say(this.t('emptyTotal'));
+        const sum = this.S.T.get_order_summary();
+        return this.say(this.t('runningTotal', { lines: linesPhrase(sum.lines.map(l => ({ name: l.product, qty: l.quantity })), this.S.lang), total: inr(sum.order_value_inr) }));
+      }
       if (I.price || I.sizes) { const r = this.answerInfo(norm, I); if (r) return r; }
 
       // ---- pending clarifications ----
@@ -827,6 +865,10 @@
         return this.readback();
       }
       if (I.done || (I.deny && this.stage === 'ordering') || (this.humanAsked && I.deny)) return this.afterDone();
+      const finalWords = /\bbhej (do|dijiye|dena|dijie)\b|\bbas bhej\b|\bsend it\b|\bconfirm\b|\bplace\b|\bfinal\b|\bbook kar\b|\border kar do\b/.test(norm);
+      if (this.stage === 'ordering' && this.S.cart.length && !this.pending && finalWords) return this.afterDone();
+      if (this.stage === 'ordering' && !this.S.cart.length && finalWords && this.leadDone) return this.say(this.t('emptyTotal'));
+      if (this.stage === 'ordering' && this.S.cart.length && !this.pending && I.affirm && !I.deny) { this.pending = { type: 'finalQ' }; return this.say(this.t('finalQ')); }
       if (I.affirm && this.stage === 'ordering' && !this.S.cart.length) return this.leadLines();
       if (I.affirm && this.stage === 'ordering' && this.complained) return this.leadLines();
       this.misses++;
@@ -837,7 +879,7 @@
     segsHaveItems(norm, needQty) { return segments(norm).some(sg => (sg.brand || sg.variants.length || sg.size) && (needQty ? sg.nums.length > 0 : sg.nums.length > 0)); }
     callbackWhen(t) {
       const [ws] = this.S.pref.Preferred_Calling_Window.split('-');
-      if (!t) return { iso: this.idx.callDate + 'T' + ws, say: this.S.lang === 'hi' ? `aapke pasand ke samay ${ws} baje` : `in your preferred window at ${ws}` };
+      if (!t) t = { hour: parseInt(ws, 10), tomorrow: false };
       const d = new Date(Date.parse(this.idx.callDate) + (t.tomorrow ? DAY : 0));
       const hh = t.hour === null ? parseInt(ws, 10) : t.hour;
       const iso = d.toISOString().slice(0, 10) + 'T' + String(hh).padStart(2, '0') + ':00';
@@ -851,7 +893,8 @@
       if (!p.lead.length) return this.say(this.t('anythingElse'));
       this.ctxBrand = p.lead[0].brand;
       const lines = linesPhrase(p.lead.map(b => ({ name: b.name, qty: b.lastQty })), this.S.lang);
-      return this.say(this.t('lead', { lines, days: p.daysSince }));
+      const key = this.leadDone ? 'leadAgain' : 'lead'; this.leadDone = true;
+      return this.say(this.t(key, { lines, days: p.daysSince }));
     }
     leadForBrand(brand) {
       this.ctxBrand = brand;
@@ -1022,6 +1065,10 @@
           if (r.question) return this.say(r.question);
           return this.say(this.t('added', { items: r.note }));
         }
+        if (I.sameAsLast) {
+          const h = (this.idx.history[this.S.rid] || []).find(x => x.SKU_ID === P.sku);
+          if (h && h.Last_Order_Qty > 0) { this.pending = null; const r = this.applyQty(P.sku, { n: h.Last_Order_Qty, unit: 'piece' }, conf, text); if (r.question) return this.say(r.question); return this.say(this.t('added', { items: r.note })); }
+        }
         if (I.vague) { const h = (this.idx.history[this.S.rid] || []).find(x => x.SKU_ID === P.sku); return this.say(this.t('vague', { item: this.idx.products[P.sku].Short, last: h ? h.Last_Order_Qty : '-' })); }
         if (I.deny && !lastNum) { this.pending = null; return this.say(this.t('anythingElse')); }
         return null;
@@ -1075,6 +1122,11 @@
           this.pending = { type: 'boxConfirm', sku: P.sku, total: P.n * per.n };
           return this.say(this.t('confirmBoxCalc', { n: P.n, per: per.n, total: P.n * per.n, item: p.Short }));
         }
+        if (/pata nahi|nahi pata|maloom nahi|malum nahi|dont know|don't know|not sure|idea nahi/.test(norm) || (I.deny && !nums.length)) {
+          const h = (this.idx.history[this.S.rid] || []).find(x => x.SKU_ID === P.sku);
+          this.pending = { type: 'qty', sku: P.sku };
+          return this.say((this.S.lang === 'hi' ? 'Koi baat nahi. ' : 'No problem. ') + this.t('askQty', { item: p.Short, last: h && h.Last_Order_Qty }));
+        }
         return this.say(this.t('askBox', { n: P.n, item: p.Short }));
       }
       if (P.type === 'boxConfirm') {
@@ -1104,8 +1156,9 @@
           return this.say(this.t('shortSplit', { item: p.Short, avail: P.avail, rest: P.requested - P.avail }));
         }
         if (lastNum) { this.pending = null; const r = this.addLine(P.sku, lastNum.n, 'retailer_request', true); if (r.question) return this.say(r.question); return this.say(this.t('added', { items: r.note })); }
+        if (I.done && !I.deny) { this.pending = null; const r = this.addLine(P.sku, P.avail, 'retailer_request', true); if (r.question) return this.say(r.question); return this.say(this.t('added', { items: r.note })); }
         if (I.deny) { this.pending = null; return this.say(this.t('declineOk') + ' ' + this.t('anythingElse')); }
-        return this.say(this.t('short', { item: p.Short, avail: P.avail, rest: P.requested - P.avail }));
+        return this.say(this.t('shortAgain', { item: p.Short, avail: P.avail, rest: P.requested - P.avail }));
       }
       if (P.type === 'alt') {
         const p = this.idx.products[P.sku];
@@ -1136,6 +1189,13 @@
         if (I.deny || I.done) { this.pending = null; this.S.events.push({ type: 'SUGGESTION_DECLINED', sku_id: P.sku }); return this.readback(this.t('declineOk') + ' '); }
         return null;
       }
+      if (P.type === 'finalQ') {
+        this.pending = null;
+        const items = segs.some(s => s.nums.length || s.brand || s.variants.length);
+        if (I.affirm && !I.deny && !items) return this.afterDone();
+        if (I.deny && !items) return this.say(this.t('whatElse'));
+        return null;
+      }
       if (P.type === 'offerHuman') {
         this.pending = null;
         if (I.affirm) { this.S.T.request_human({ reason: 'Agent could not understand retailer' }); return this.close('human', {}, 'ESCALATED'); }
@@ -1162,6 +1222,14 @@
     }
     answerInfo(norm, I) {
       const seg = segments(norm)[0];
+      if (I.price && (!seg || !(seg.brand || seg.variants.length || seg.size))) {
+        const P = this.pending, sku = (P && P.sku) || this.lastSku, p = sku && this.idx.products[sku];
+        if (p) {
+          const hiL = this.S.lang === 'hi';
+          const tail = P && P.type === 'suggest' ? (hiL ? ` ${P.qty} bhej doon?` : ` Shall I add ${P.qty}?`) : P && P.type === 'qty' ? (hiL ? ' Kitne bhejun?' : ' How many should I send?') : '';
+          return this.say(this.t('price', { item: p.Short, bill: inr(p.Distributor_Billing_Price_INR), mrp: inr(p.MRP_INR), margin: inr(p.MRP_INR - p.Distributor_Billing_Price_INR) }) + tail);
+        }
+      }
       if (!seg) return null;
       const c = candidates(this.idx, seg, this.ctxBrand);
       if (I.sizes && seg.brand) return this.say(this.t('sizes', { brand: seg.brand, list: this.sizeOptions(seg.brand) }) + ' ' + this.t('anythingElse'));
@@ -1178,9 +1246,13 @@
     }
     repeatLast() {
       const lines = this.ctxBrand ? this.S.plan.basket.filter(b => b.brand === this.ctxBrand && !b.lapsed).slice(0, 2) : this.S.plan.lead;
+      // lines that fit in stock go first, so one stock question never drops the other lines
+      const fits = b => { const st = stockOf(this.idx, this.S.dist, b.sku); return !!st && st.available >= b.lastQty; };
+      const ordered = lines.filter(fits).concat(lines.filter(b => !fits(b)));
       const notes = [], qs = [];
-      for (const b of lines) { const r = this.addLine(b.sku, b.lastQty, 'retailer_request'); if (r.question) { qs.push(r.question); break; } notes.push(r.note); }
-      if (qs.length) return this.say((notes.length ? notes.join(', ') + '. ' : '') + qs[0]);
+      for (const b of ordered) { const r = this.addLine(b.sku, b.lastQty, 'retailer_request'); if (r.question) { qs.push(r.question); break; } notes.push(r.note); }
+      const hi = this.S.lang === 'hi';
+      if (qs.length) return this.say((notes.length ? (hi ? joinList(notes, 'hi') + ' note kar liya. ' : 'Noted ' + joinList(notes, 'en') + '. ') : '') + qs[0]);
       return this.say(this.t('added', { items: joinList(notes, this.S.lang) }));
     }
     afterDone(prefix) {
