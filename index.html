@@ -50,6 +50,7 @@ input,select{border:1px solid #b9bec7;border-radius:4px;padding:6px 8px;backgrou
 .msg.a{background:#eef4fc;align-self:flex-start}
 .msg.r{background:#f6f6f6;border-color:#ddd;align-self:flex-end}
 .msg .by{display:block;font-size:11px;color:#666;font-weight:600}
+.msg .by .tl{font-weight:400;color:#8a8f98;font-family:Consolas,Menlo,monospace;font-size:10.5px;margin-left:6px}
 .msg.sys{align-self:center;font-size:12px;color:#777;background:none;border:0}
 .msg.think{color:#777}
 .empty{margin:20px auto;max-width:460px;color:#444;font-size:13px}
@@ -199,8 +200,10 @@ function renderLog(extra) {
     L.innerHTML = `<div class="empty"><h3>How to test</h3><ol><li>Pick a retailer from the list (sorted by call priority).</li><li>Click <b>Start call</b>. The agent speaks first.</li><li>You act as the retailer: type a reply, use the mic, or click one of the sample replies below.</li><li>Order, tool calls and final JSON are shown on the right.</li></ol>${warn}<p class="note">Current mode: ${mode === 'claude' ? 'LLM mode (Claude with tool calling, any of the 10 languages).' : 'Rule-based (Hinglish + English, works offline).'}${!sample ? ' LLM mode (Claude with tool calling) runs only inside Claude, so it is off on this page; its code is in index.html.' : ''} Mic: Chrome or Edge.</p></div>`;
     return;
   }
+  // "add_or_update_item, add_or_update_item" -> "add_or_update_item ×2"
+  function toolLabel(str) { const n = {}; String(str).split(/,\s*/).filter(Boolean).forEach(x => { n[x] = (n[x] || 0) + 1; }); return Object.entries(n).map(([k, c]) => c > 1 ? k + ' ×' + c : k).join(', '); }
   L.innerHTML = conv.transcript.map(t => t.who === 'agent'
-    ? `<div class="msg a"><span class="by">Agent${t.tools ? ' [' + esc(t.tools) + ']' : ''}</span>${esc(t.text)}</div>`
+    ? `<div class="msg a"><span class="by">Agent${t.tools ? ' <span class="tl">tools: ' + esc(toolLabel(t.tools)) + '</span>' : ''}</span>${esc(t.text)}</div>`
     : t.who === 'sys' ? `<div class="msg sys">${esc(t.text)}</div>`
     : `<div class="msg r"><span class="by">Retailer${t.confidence !== undefined && t.confidence < 1 ? ' (ASR conf ' + t.confidence + ')' : ''}</span>${esc(t.text)}</div>`).join('') + (extra || '');
   L.scrollTop = L.scrollHeight;
