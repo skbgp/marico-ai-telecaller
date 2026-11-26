@@ -24,6 +24,8 @@
     order: 'ऑर्डर', orders: 'ऑर्डर', piece: 'पीस', pieces: 'पीस', litre: 'लीटर', liter: 'लीटर', pouch: 'पाउच', pouches: 'पाउच', bottle: 'बोतल', box: 'बॉक्स', boxes: 'बॉक्स', pack: 'पैक', packet: 'पैकेट', size: 'साइज़', sizes: 'साइज़',
     distributor: 'डिस्ट्रीब्यूटर', sales: 'सेल्स', assistant: 'असिस्टेंट', officer: 'ऑफ़िसर', representative: 'रिप्रेज़ेंटेटिव', team: 'टीम', stock: 'स्टॉक', price: 'प्राइस', rate: 'रेट', billing: 'बिलिंग', total: 'टोटल', value: 'वैल्यू', discount: 'डिस्काउंट', scheme: 'स्कीम', free: 'फ़्री', offer: 'ऑफ़र',
     place: 'प्लेस', confirm: 'कन्फ़र्म', confirmation: 'कन्फ़र्मेशन', cancel: 'कैंसिल', delivery: 'डिलीवरी', payment: 'पेमेंट', credit: 'क्रेडिट', complaint: 'कंप्लेंट', request: 'रिक्वेस्ट', note: 'नोट', number: 'नंबर', call: 'कॉल', callback: 'कॉल बैक', product: 'प्रोडक्ट', item: 'आइटम', line: 'लाइन', extra: 'एक्स्ट्रा', final: 'फ़ाइनल', available: 'अवेलेबल', regularly: 'रेगुलरली', normal: 'नॉर्मल', trial: 'ट्रायल', try: 'ट्राई', area: 'एरिया', sir: 'सर', madam: 'मैडम', schedule: 'शेड्यूल', terms: 'टर्म्स', booking: 'बुकिंग', suggestion: 'सजेशन', quantity: 'क्वांटिटी',
+    jar: 'जार', hua: 'हुआ', hui: 'हुई', jaisi: 'जैसी', dukaan: 'दुकान', dukaanein: 'दुकानें', dukaanon: 'दुकानों', ise: 'इसे', rakhti: 'रखती', rakhte: 'रखते', usual: 'यूज़ुअल', deo: 'डियो', kiya: 'किया', kiye: 'किए',
+    exact: 'एग्ज़ैक्ट', toh: 'तो', loongi: 'लूँगी', lungi: 'लूँगी', dopahar: 'दोपहर', raat: 'रात', karti: 'करती', leti: 'लेती', aata: 'आता', jaata: 'जाता',
     add: 'ऐड', time: 'टाइम', margin: 'मार्जिन', conversion: 'कन्वर्ज़न', list: 'लिस्ट', date: 'डेट', promise: 'प्रॉमिस', per: 'प्रति', out: 'आउट', follow: 'फ़ॉलो', up: 'अप', of: 'ऑफ़', reserved: 'रिज़र्व्ड',
     // brands and products
     marico: 'मैरिको', asha: 'आशा', parachute: 'पैराशूट', coconut: 'कोकोनट', oil: 'ऑयल', advansed: 'एडवांस्ड', jasmine: 'जैस्मिन', hair: 'हेयर', saffola: 'सफ़ोला', gold: 'गोल्ड', edible: 'एडिबल', active: 'एक्टिव', masala: 'मसाला', oats: 'ओट्स', nihar: 'निहार', naturals: 'नेचुरल्स', shanti: 'शांति', badam: 'बादाम', amla: 'आंवला', livon: 'लिवॉन', serum: 'सीरम', styler: 'स्टाइलर', gel: 'जेल', set: 'सेट', wet: 'वेट', deodorant: 'डिओडोरेंट', spray: 'स्प्रे', dabur: 'डाबर',
@@ -44,6 +46,11 @@
     t = t.replace(/\bAI\b/g, 'ए आई').replace(/\bSKU\b/g, 'एस के यू').replace(/\bMRP\b/g, 'एम आर पी').replace(/\bOK\b/gi, 'ओके');
     t = t.replace(/(\d+)\s*[x×]\s*(?=\d)/g, '$1 गुणा ');
     t = t.replace(/[A-Za-z]+/g, w => W[w.toLowerCase()] || w);
+    // punctuation some Hindi voices read out as words ("exclamation point", "colon"):
+    // ! and sentence-ending . become the Hindi full stop (danda), : and / become pauses, % is said in words
+    t = t.replace(/(\d+)\s*%/g, '$1 प्रतिशत');
+    t = t.replace(/!+/g, '।').replace(/\.(?=\s|$)/g, '।').replace(/:(?!\d)/g, ',').replace(/\//g, ' ');
+    t = t.replace(/["“”‘’*_#]/g, '').replace(/।\s*।/g, '।').replace(/,\s*।/g, '।');
     t = t.replace(/\s*[;|]\s*/g, ', ').replace(/\s{2,}/g, ' ').trim();
     return t;
   }
@@ -53,6 +60,7 @@
     t = t.replace(/\b(?:order\s+)?ORD-[\w-]+/gi, 'your order');
     t = t.replace(/(\d),(?=\d)/g, '$1').replace(/(?:₹|Rs\.?\s?)\s?(\d+)/g, '$1 rupees');
     t = t.replace(/(\d)\s*ml\b/gi, '$1 ml').replace(/(\d)\s*L\b/g, '$1 litre');
+    t = t.replace(/!+/g, '.').replace(/:(?!\d)/g, ',');   // some voices read punctuation out as words
     return t.replace(/\s{2,}/g, ' ').trim();
   }
   function speechText(text, lang) {
