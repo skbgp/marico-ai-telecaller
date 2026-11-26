@@ -73,6 +73,9 @@ button.end{background:#b3261e;border-color:#b3261e;color:#fff}button.end:hover{b
 .empty h3{font-size:14px;margin-bottom:6px}
 form.say{display:flex;gap:6px;padding:8px 12px;border-top:1px solid #d5d9e0}
 form.say input{flex:1;font-size:15px}
+#txt.locked{background:#f3f4f6;color:#666;cursor:pointer}
+@keyframes nudge{0%,100%{box-shadow:0 0 0 0 rgba(43,87,151,0)}50%{box-shadow:0 0 0 5px rgba(43,87,151,.45)}}
+button.nudge{animation:nudge .45s 3}
 #mic{display:inline-grid;place-items:center;width:40px;padding:0}
 #mic[aria-pressed=true]{background:#b3261e;border-color:#b3261e;color:#fff}
 #mic svg{width:18px;height:18px}
@@ -172,7 +175,7 @@ const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
 let DATA = null, idx = null, plan = [], sel = 'R042', conv = null, mode = 'rules', busy = false;
 let claudeMsgs = [], sample = null, tts = null, dict = null, listening = false, rec = null;
-let callState = 'idle', t0 = 0, tEnd = 0, timer = null, callToken = 0, speakTok = 0, agentSpeaking = false, handsFree = false, thinking = false, showAllChips = false;
+let pendingText = null, callState = 'idle', t0 = 0, tEnd = 0, timer = null, callToken = 0, speakTok = 0, agentSpeaking = false, handsFree = false, thinking = false, showAllChips = false;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const mmss = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(Math.floor(s % 60)).padStart(2, '0');
 const elapsed = () => !t0 ? 0 : Math.max(0, ((callState === 'ended' ? tEnd : Date.now()) - t0) / 1000);
@@ -223,7 +226,7 @@ function renderQueue() {
 }
 
 function selectRetailer(rid) {
-  callToken++; clearInterval(timer); callState = 'idle'; t0 = tEnd = 0; handsFree = false; thinking = false; busy = false;
+  callToken++; clearInterval(timer); callState = 'idle'; t0 = tEnd = 0; handsFree = false; thinking = false; busy = false; pendingText = null;
   sel = rid; conv = null; claudeMsgs = []; stopVoice();
   renderQueue(); renderWho(); renderLog(); renderPad(); renderPlan(); renderTools(); renderJson();
 }
@@ -252,7 +255,11 @@ function renderWho() {
   <div class="acts"><button class="primary" id="start" ${live ? 'disabled' : ''}>${conv ? 'Call again' : 'Start call'}</button><button id="hang" class="${live ? 'end' : ''}" ${live ? '' : 'disabled'}>End call</button></div>`;
   $('#start').onclick = startCall; $('#hang').onclick = hangUp;
   const canTalk = callState === 'live' && conv && !conv.S.closed;
-  $('#txt').disabled = !canTalk; $('#send').disabled = !canTalk; $('#mic').disabled = !canTalk || !(dict || SR);
+  const box = $('#txt');
+  box.readOnly = !canTalk; box.classList.toggle('locked', !canTalk);
+  box.placeholder = canTalk ? 'Type the retailer\'s reply, e.g. Parachute 500 ml ke 15' : callState === 'idle' ? 'Click Start call first'
+    : callState === 'ended' ? 'Call ended. Click Call again' : 'Connecting...';
+  $('#send').disabled = !canTalk; $('#mic').disabled = !canTalk || !(dict || SR);
   $('#mic').setAttribute('aria-pressed', String(!!(handsFree || listening)));
   if (!dict && !SR) $('#mic').title = 'Mic input needs Chrome or Edge. Type instead.';
   renderChips();
@@ -303,7 +310,7 @@ function renderLog() {
   if (!conv) {
     const p = current();
     const warn = p.decision === 'DO_NOT_CALL' ? '<p><b>Note:</b> this retailer has Do_Not_Call_Flag = Yes, so the planner will not call. You can still start a call to test.</p>' : p.decision === 'NOT_DUE' ? `<p><b>Note:</b> not due today (${esc(p.why[0])}).</p>` : '';
-    L.innerHTML = `<div class="empty"><h3>How to try it</h3><ol><li>Pick a retailer on the left (highest priority first).</li><li>Click <b>Start call</b>. Asha dials, the retailer picks up and she speaks first.</li><li>Answer as the retailer: type, tap the mic and talk (Chrome or Edge), or click a test reply below the box.</li><li>The order builds on the right as she books each line; every function call is in the Tool log tab.</li></ol>${warn}<p class="note">Current mode: ${mode === 'claude' ? 'LLM mode (Claude with tool calling, any of the 10 languages).' : 'Rule-based (Hinglish + English, works offline).'}${!sample ? ' LLM mode (Claude with tool calling) runs only inside Claude, so it is off on this page; its code is in index.html.' : ''}</p></div>`;
+    L.innerHTML = `<div class="empty"><h3>How to try it</h3><ol><li>Pick a retailer from the call list (highest priority first; on a small screen it is the drop-down at the top).</li><li>Click <b>Start call</b>. Asha dials, the retailer picks up and she speaks first.</li><li>Answer as the retailer: type, tap the mic and talk (Chrome or Edge), or click a test reply below the box.</li><li>The order builds on the right as she books each line; every function call is in the Tool log tab.</li></ol>${warn}<p class="note">Current mode: ${mode === 'claude' ? 'LLM mode (Claude with tool calling, any of the 10 languages).' : 'Rule-based (Hinglish + English, works offline).'}${!sample ? ' LLM mode (Claude with tool calling) runs only inside Claude, so it is off on this page; its code is in index.html.' : ''}</p></div>`;
     return;
   }
   const by = (name, role, at) => `<span class="by">${esc(name)}${role ? ` <span class="role">${esc(role)}</span>` : ''}<span class="tm">${at !== undefined ? mmss(at) : ''}</span></span>`;
@@ -501,7 +508,7 @@ async function claudeTurn(userText) {
 
 /* ---------------- call flow ---------------- */
 async function startCall() {
-  stopVoice(); handsFree = false; busy = false; thinking = false;
+  stopVoice(); handsFree = false; busy = false; thinking = false; pendingText = null;
   const tok = ++callToken;
   conv = new AgentCore.Conversation(idx, sel);
   conv.mode = mode; claudeMsgs = [];
@@ -541,7 +548,8 @@ function hangUp() {
 const thinkMs = txt => 550 + Math.min(650, String(txt || '').length * 3);
 async function retailerSays(text, confidence) {
   text = String(text || '').trim();
-  if (!text || !conv || conv.S.closed || busy || callState !== 'live') return;
+  if (!text || !conv || conv.S.closed || callState !== 'live') return;
+  if (busy) { pendingText = text; $('#txt').value = ''; return; }   // Asha is still answering: send this right after
   busy = true; $('#txt').value = '';
   hushAgent();   // the retailer talks over Asha: she stops
   stopListening();
@@ -565,7 +573,11 @@ async function retailerSays(text, confidence) {
     thinking = false;
     refresh();
     afterReply(out.text, out.lang);
-  } finally { busy = false; if (tok === callToken) { thinking = false; renderWho(); } }
+  } finally {
+    busy = false;
+    if (tok === callToken) { thinking = false; renderWho(); }
+    if (pendingText && tok === callToken) { const next = pendingText; pendingText = null; setTimeout(() => retailerSays(next), 50); } else pendingText = null;
+  }
 }
 
 /* ---------------- test replies ---------------- */
@@ -612,7 +624,10 @@ function runTests() {
 $('#list').addEventListener('click', e => { const b = e.target.closest('button[data-r]'); if (b) selectRetailer(b.dataset.r); });
 $('#pick').addEventListener('change', e => selectRetailer(e.target.value));
 $('#q').addEventListener('input', renderQueue);
-$('#say').addEventListener('submit', e => { e.preventDefault(); retailerSays($('#txt').value); });
+function nudgeStart() { const b = $('#start'); if (!b || b.disabled) return; b.classList.remove('nudge'); void b.offsetWidth; b.classList.add('nudge'); }
+$('#say').addEventListener('submit', e => { e.preventDefault(); if ($('#txt').readOnly) { nudgeStart(); return; } retailerSays($('#txt').value); });
+$('#txt').addEventListener('focus', () => { if ($('#txt').readOnly) nudgeStart(); });
+$('#txt').addEventListener('keydown', e => { if ($('#txt').readOnly && e.key.length === 1) nudgeStart(); });
 $('#chips').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.id === 'moreChips') { showAllChips = !showAllChips; renderChips(); return; }
