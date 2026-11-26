@@ -91,18 +91,19 @@
 
   // Some browsers (Chrome, the Claude desktop browser) list no voices until speech is first used.
   // Speaking before the list arrives means the system default voice, which can be male.
-  // warmUp() (on the Start call click) starts loading; say() waits for the list (up to 2.5 s).
+  // warmUp() (on the Start call click) starts loading; say() waits for the list once (up to 1.5 s).
   function warmUp() {
     if (typeof speechSynthesis === 'undefined') return;
     try { speechSynthesis.getVoices(); const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) { }
   }
+  let gaveUp = false;   // waited once and the list never came: this browser has no voices, don't wait again
   function whenVoicesReady(cb, maxMs) {
-    if (typeof speechSynthesis === 'undefined' || speechSynthesis.getVoices().length) return cb();
+    if (typeof speechSynthesis === 'undefined' || speechSynthesis.getVoices().length || gaveUp) return cb();
     let fired = false;
     const go = () => { if (fired) return; fired = true; try { speechSynthesis.removeEventListener('voiceschanged', go); } catch (e) { } cb(); };
     try { speechSynthesis.addEventListener('voiceschanged', go); } catch (e) { }
     const t0 = Date.now();
-    (function poll() { if (fired) return; if (speechSynthesis.getVoices().length || Date.now() - t0 > (maxMs || 2500)) return go(); setTimeout(poll, 100); })();
+    (function poll() { if (fired) return; if (speechSynthesis.getVoices().length) return go(); if (Date.now() - t0 > (maxMs || 1500)) { gaveUp = true; return go(); } setTimeout(poll, 100); })();
   }
 
   let sayId = 0;
