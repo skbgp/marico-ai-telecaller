@@ -103,7 +103,7 @@ details summary{cursor:pointer}
       <button id="m-claude" aria-pressed="false" title="LLM mode: Claude parses free speech and calls the same tool functions">LLM mode</button>
       <button id="m-rules" aria-pressed="true" title="Rule-based mode: Hinglish/English parser, works offline">Rule-based</button>
     </div>
-    <label class="tog"><input type="checkbox" id="voice" checked> Voice output</label>
+    <label class="tog"><input type="checkbox" id="voice" checked> Voice output</label> <span id="voiceName" class="note" style="margin-left:4px"></span>
   </div>
 </header>
 <main class="grid">
@@ -145,6 +145,7 @@ details summary{cursor:pointer}
 </main>
 <script src="agent_core.js"></script>
 <script src="scenarios.js"></script>
+<script src="voice.js"></script>
 <script>
 {
 const $ = s => document.querySelector(s);
@@ -256,7 +257,12 @@ function refresh(extra) { renderWho(); renderLog(extra); renderPad(); renderTool
 function speak(text, lang) {
   if (!$('#voice').checked || !text) return;
   if (tts) { tts.speak(text, { language: lang === 'en' ? 'en' : undefined }).catch(() => {}); return; }
-  try { const u = new SpeechSynthesisUtterance(text); u.lang = lang === 'en' ? 'en-IN' : 'hi-IN'; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { }
+  try {
+    const used = window.VoiceHi ? VoiceHi.say(text, lang) : '';
+    const vn = $('#voiceName');
+    if (vn) vn.textContent = used ? '(' + used + ')' : '(no voice found in this browser)';
+    if (vn && lang !== 'en' && window.VoiceHi && !VoiceHi.pickVoice('hi')) vn.textContent = '(no Hindi voice in this browser; use Chrome or Edge)';
+  } catch (e) { }
 }
 function stopVoice() { try { tts && tts.stop(); } catch (e) { } try { speechSynthesis.cancel(); } catch (e) { } if (listening && dict) { dict.stop().catch(() => {}); } if (listening && rec) { try { rec.stop(); } catch (e) { } } }
 
