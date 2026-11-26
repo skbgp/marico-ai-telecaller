@@ -1,10 +1,10 @@
 # Marico AI Telecaller (prototype)
 
-Marico x IIT Madras, AI-Powered General Trade Telecalling build challenge. Shubham Kumar, M.Tech CSE, IIT Madras.
+Marico x IIT Madras, AI-Powered General Trade Telecalling build challenge. Shubham Kumar, M.Tech CSE, IIT Madras (CS25M046).
 
 **Live demo:** https://skbgp.github.io/marico-ai-telecaller/ (open in Chrome or Edge)
 
-**Slides:** [Solution Presentation (5 slides)](slides/Solution_Presentation_Shubham_Kumar.pdf), [Scalability Approach (3 slides)](slides/Scalability_Approach_Shubham_Kumar.pdf)
+**Slides:** [Solution Presentation (5 slides)](slides/Solution_Presentation_Shubham_Kumar_CS25M046.pdf), [Scalability Approach (3 slides)](slides/Scalability_Approach_Shubham_Kumar_CS25M046.pdf)
 
 ## How to use the demo
 
