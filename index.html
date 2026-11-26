@@ -74,6 +74,7 @@ button.end{background:#b3261e;border-color:#b3261e;color:#fff}button.end:hover{b
 form.say{display:flex;gap:6px;padding:8px 12px;border-top:1px solid #d5d9e0}
 form.say input{flex:1;font-size:15px}
 #txt.locked{background:#f3f4f6;color:#666;cursor:pointer}
+#voiceName.warnv{color:#ffd58a;opacity:1}
 @keyframes nudge{0%,100%{box-shadow:0 0 0 0 rgba(43,87,151,0)}50%{box-shadow:0 0 0 5px rgba(43,87,151,.45)}}
 button.nudge{animation:nudge .45s 3}
 #mic{display:inline-grid;place-items:center;width:40px;padding:0}
@@ -165,9 +166,9 @@ details summary{cursor:pointer}
     </div>
   </aside>
 </main>
-<script src="agent_core.js?v=20261126-1"></script>
-<script src="scenarios.js?v=20261126-1"></script>
-<script src="voice.js?v=20261126-1"></script>
+<script src="agent_core.js?v=20261126-2"></script>
+<script src="scenarios.js?v=20261126-2"></script>
+<script src="voice.js?v=20261126-2"></script>
 <script>
 {
 const $ = s => document.querySelector(s);
@@ -389,9 +390,11 @@ function speak(text, lang, then) {
   if (tts) { Promise.resolve(tts.speak(text, { language: lang === 'en' ? 'en' : undefined })).then(fin, fin); return; }
   try {
     if (!window.VoiceHi) { setTimeout(fin, 0); return; }
-    VoiceHi.say(text, lang, fin, used => {
+    VoiceHi.say(text, lang, fin, (used, info) => {
       const vn = $('#voiceName'); if (!vn) return;
-      vn.textContent = used ? '(' + used + ')' : lang !== 'en' ? '(no Hindi voice in this browser; use Chrome or Edge)' : '(no voice found in this browser)';
+      vn.classList.toggle('warnv', !!(info && info.limited));
+      vn.textContent = info && info.limited ? `(${used || 'default voice'}: Claude's browser can only use your computer's default voice. For Asha's female Hindi voice, open this link in Chrome or Edge.)`
+        : used ? '(' + used + ')' : lang !== 'en' ? '(no Hindi voice in this browser; use Chrome or Edge)' : '(no voice found in this browser)';
     });
   } catch (e) { fin(); }
 }
@@ -650,7 +653,7 @@ $('#mic').onclick = () => {
   startListening();
 };
 
-fetch('marico_data.json?v=20261126-1').then(r => r.json()).then(d => {
+fetch('marico_data.json?v=20261126-2').then(r => r.json()).then(d => {
   DATA = d; idx = AgentCore.buildIndex(DATA); plan = AgentCore.dailyCallPlan(idx);
   selectRetailer(sel);
 }).catch(() => { $('#log').innerHTML = '<div class="empty"><h3>Data did not load.</h3><p>Reload the page.</p></div>'; });

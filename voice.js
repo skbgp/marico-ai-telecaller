@@ -114,6 +114,13 @@
     (function poll() { if (fired) return; if (speechSynthesis.getVoices().length) return go(); if (Date.now() - t0 > (maxMs || 1500)) { gaveUp = true; return go(); } setTimeout(poll, 100); })();
   }
 
+  // The Claude desktop app's built-in browser can only use the computer's default voice: it ignores the
+  // voice a page picks (on a Mac set to Rishi, every voice comes out as Rishi). A default English voice
+  // reads Devanagari badly and says punctuation out loud, so there we speak the text the way the
+  // default voice reads best, and the page tells the user to open the demo in Chrome or Edge.
+  const LIMITED = typeof navigator !== 'undefined' && /\bClaude\/\d/.test(navigator.userAgent || '');
+  function defaultVoice() { try { return speechSynthesis.getVoices().find(v => v.default) || null; } catch (e) { return null; } }
+
   let sayId = 0;
   function stop() { sayId++; if (typeof speechSynthesis !== 'undefined') { try { speechSynthesis.cancel(); } catch (e) { } } }
 
@@ -126,6 +133,21 @@
     const id = ++sayId;
     whenVoicesReady(() => {
       if (id !== sayId) { done(); return; }   // stopped while waiting
+      if (LIMITED) {
+        const dv = defaultVoice(), dvHindi = !!dv && /^hi/i.test(dv.lang);
+        const tl = lang !== 'en' && dvHindi ? speechText(text, 'hi') : englishSpeech(text);
+        if (onVoice) onVoice(dv ? dv.name : '', { limited: true });
+        speechSynthesis.cancel();
+        const ps = chunks(tl);
+        ps.forEach((c, i) => {
+          const u = new SpeechSynthesisUtterance(c);
+          u.lang = dv ? dv.lang : (lang === 'en' ? 'en-IN' : 'hi-IN'); u.rate = 1;
+          if (i === ps.length - 1) { u.onend = done; u.onerror = done; }
+          speechSynthesis.speak(u);
+        });
+        if (!ps.length) setTimeout(done, 0); else setTimeout(done, 1500 + tl.length * 70);
+        return;
+      }
       const listed = speechSynthesis.getVoices().length > 0;
       let v = pickVoice(lang === 'en' ? 'en' : 'hi'), t, uLang;
       if (lang === 'en') { t = englishSpeech(text); uLang = v ? v.lang : 'en-IN'; }
@@ -146,5 +168,5 @@
       setTimeout(done, 1500 + t.length * 70);
     });
   }
-  return { speechText, hindiSpeech, englishSpeech, pickVoice, say, stop, warmUp, chunks, WORDS: W };
+  return { speechText, hindiSpeech, englishSpeech, pickVoice, say, stop, warmUp, chunks, LIMITED, WORDS: W };
 });
