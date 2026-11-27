@@ -2624,20 +2624,37 @@
  },
  {
   "id": "RX1",
-  "name": "Tamil retailer: greeting in own language",
+  "name": "Tamil retailer: whole call in Tamil, English meaning under every line",
   "rid": "R010",
   "pass": true,
   "checks": [
    {
-    "check": "Greets in Tamil",
+    "check": "Greets in Tamil (வணக்கம்)",
+    "pass": true
+   },
+   {
+    "check": "Every line in Tamil script",
+    "pass": true
+   },
+   {
+    "check": "Every line has its English meaning",
+    "pass": true
+   },
+   {
+    "check": "Owner addressed the Tamil way (Murugan sir)",
+    "pass": true
+   },
+   {
+    "check": "Order placed",
     "pass": true
    }
   ],
   "transcript": [
    {
     "who": "agent",
-    "text": "Vanakkam (வணக்கம்)! This is Asha, Marico's AI sales assistant. Am I speaking with Sanjay Murugan of Murugan Super Bazaar? I'd like two minutes for your Parachute and Saffola order.",
-    "lang": "en"
+    "text": "வணக்கம்! நான் Marico-வின் AI sales assistant ஆஷா பேசுறேன். Murugan Super Bazaar-இன் Sanjay Murugan அவர்களிடம் பேசுகிறேனா? Parachute மற்றும் Saffola order-க்காக இரண்டு நிமிடம் வேண்டும்.",
+    "lang": "ta",
+    "en": "Vanakkam! This is Asha, Marico's AI sales assistant. Am I speaking with Sanjay Murugan of Murugan Super Bazaar? I'd like two minutes for your Parachute and Saffola order."
    },
    {
     "who": "retailer",
@@ -2645,18 +2662,105 @@
    },
    {
     "who": "agent",
-    "text": "Thank you, Murugan ji! Last time you took 2 pieces of Parachute 500 ml and 1 piece of 1 litre, 25 days ago. How much should I send this time?",
-    "lang": "en"
+    "text": "நன்றி Murugan sir! போன முறை 25 நாள் முன்பு Parachute 500 ml 2 pieces மற்றும் 1 litre 1 piece வாங்கினீங்க. இந்த முறை எவ்வளவு அனுப்பட்டும்?",
+    "lang": "ta",
+    "en": "Thank you, Murugan sir! Last time you took 2 pieces of Parachute 500 ml and 1 piece of 1 litre, 25 days ago. How much should I send this time?"
+   },
+   {
+    "who": "retailer",
+    "text": "Parachute 500 ml 3 pieces and 1 litre 1 piece"
+   },
+   {
+    "who": "agent",
+    "text": "சரி, Parachute 500 ml 3 pieces மற்றும் Parachute 1 litre 1 piece note பண்ணிட்டேன். வேறு ஏதாவது வேணுமா?",
+    "lang": "ta",
+    "en": "Done, I've noted 3 pieces of Parachute 500 ml and 1 piece of Parachute 1 litre. Anything else?"
+   },
+   {
+    "who": "retailer",
+    "text": "Podhum"
+   },
+   {
+    "who": "agent",
+    "text": "ஒரு புது idea: Saffola Masala Oats 40 g. உங்களைப் போன்ற 29% கடைகள் இதை வைத்திருக்கின்றன. Trial-க்கு 12 pieces சேர்க்கட்டுமா? வேண்டாம்னாலும் பரவாயில்லை.",
+    "lang": "ta",
+    "en": "One new idea: Saffola Masala Oats 40 g. 29% of similar stores stock it. Shall I add 12 pieces as a trial? No problem if not."
+   },
+   {
+    "who": "retailer",
+    "text": "Illai"
+   },
+   {
+    "who": "agent",
+    "text": "பரவாயில்லை. உங்க order-ஐ ஒரு முறை சொல்றேன்: Parachute 500 ml 3 pieces மற்றும் 1 litre 1 piece. மொத்தம் ₹954. இந்த order-ஐ place பண்ணட்டுமா?",
+    "lang": "ta",
+    "en": "No problem. Let me read back your order: 3 pieces of Parachute 500 ml and 1 piece of 1 litre. Total ₹954. Shall I place this order?"
+   },
+   {
+    "who": "retailer",
+    "text": "Aamaa"
+   },
+   {
+    "who": "agent",
+    "text": "நன்றி Murugan sir! உங்க order ORD-20261120-R010-001 place ஆகி distributor-க்கு அனுப்பப்பட்டது. நல்ல நாளாக இருக்கட்டும்!",
+    "lang": "ta",
+    "en": "Thank you, Murugan sir! Your order ORD-20261120-R010-001 is placed and sent to your distributor. Have a good day!"
    }
   ],
   "record": {
    "call_id": "CALL-20261120-R010-01",
    "retailer_id": "R010",
    "distributor_id": "D005",
-   "outcome": "IN_PROGRESS",
+   "outcome": "ORDER_CONFIRMED",
    "identity_verified": true,
-   "order": null,
-   "events": []
+   "order": {
+    "order_id": "ORD-20261120-R010-001",
+    "call_id": "CALL-20261120-R010-01",
+    "channel": "AI_TELECALL",
+    "created_on": "2026-11-20",
+    "retailer_id": "R010",
+    "retailer_name": "Murugan Super Bazaar",
+    "distributor_id": "D005",
+    "language": "ta",
+    "lines": [
+     {
+      "line_no": 1,
+      "sku_id": "P003",
+      "product": "Parachute Coconut Oil",
+      "pack_size": "500 ml",
+      "quantity": 3,
+      "selling_unit": "Bottle",
+      "unit_price_inr": 196,
+      "line_value_inr": 588,
+      "source": "retailer_request"
+     },
+     {
+      "line_no": 2,
+      "sku_id": "P004",
+      "product": "Parachute Coconut Oil",
+      "pack_size": "1 L",
+      "quantity": 1,
+      "selling_unit": "Jar",
+      "unit_price_inr": 366,
+      "line_value_inr": 366,
+      "source": "retailer_request"
+     }
+    ],
+    "order_value_inr": 954,
+    "currency": "INR",
+    "price_basis": "Distributor_Billing_Price_INR",
+    "confirmation_status": "CONFIRMED_BY_RETAILER",
+    "confirmation_utterance": "Aamaa",
+    "stock_snapshot_date": "2026-11-20",
+    "allocation": "Reserved against snapshot; final allocation by distributor DMS",
+    "discount_applied_inr": 0
+   },
+   "events": [
+    {
+     "type": "SUGGESTION_DECLINED",
+     "sku_id": "P009"
+    }
+   ]
   }
  },
  {
@@ -4051,6 +4155,457 @@
   ],
   "transcript": [],
   "record": null
+ },
+ {
+  "id": "RX22",
+  "name": "Each regional language: whole order taken in that language",
+  "rid": null,
+  "pass": true,
+  "checks": [
+   {
+    "check": "Tamil: every line in Tamil with its English meaning, order placed",
+    "pass": true
+   },
+   {
+    "check": "Telugu: every line in Telugu with its English meaning, order placed",
+    "pass": true
+   },
+   {
+    "check": "Kannada: every line in Kannada with its English meaning, order placed",
+    "pass": true
+   },
+   {
+    "check": "Malayalam: every line in Malayalam with its English meaning, order placed",
+    "pass": true
+   },
+   {
+    "check": "Bengali: every line in Bengali with its English meaning, order placed",
+    "pass": true
+   },
+   {
+    "check": "Marathi: every line in Marathi with its English meaning, order placed",
+    "pass": true
+   },
+   {
+    "check": "Gujarati: every line in Gujarati with its English meaning, order placed",
+    "pass": true
+   },
+   {
+    "check": "Odia: every line in Odia with its English meaning, order placed",
+    "pass": true
+   },
+   {
+    "check": "Assamese: every line in Assamese with its English meaning, order placed",
+    "pass": true
+   }
+  ],
+  "transcript": [],
+  "record": null
+ },
+ {
+  "id": "RX23",
+  "name": "Language on request: English, back to Tamil, Hindi, \"Hindi nahi aati\"",
+  "rid": "R010",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Replies follow the asks: ta, en, en, ta, ta, hi, ta, ta",
+    "pass": true
+   },
+   {
+    "check": "Open question asked again in the new language",
+    "pass": true
+   },
+   {
+    "check": "Order kept across switches",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "வணக்கம்! நான் Marico-வின் AI sales assistant ஆஷா பேசுறேன். Murugan Super Bazaar-இன் Sanjay Murugan அவர்களிடம் பேசுகிறேனா? Parachute மற்றும் Saffola order-க்காக இரண்டு நிமிடம் வேண்டும்.",
+    "lang": "ta",
+    "en": "Vanakkam! This is Asha, Marico's AI sales assistant. Am I speaking with Sanjay Murugan of Murugan Super Bazaar? I'd like two minutes for your Parachute and Saffola order."
+   },
+   {
+    "who": "retailer",
+    "text": "Can we speak in English?"
+   },
+   {
+    "who": "agent",
+    "text": "Sure. Am I speaking with Sanjay Murugan of Murugan Super Bazaar?",
+    "lang": "en"
+   },
+   {
+    "who": "retailer",
+    "text": "Yes, speaking."
+   },
+   {
+    "who": "agent",
+    "text": "Thank you, Murugan sir! Last time you took 2 pieces of Parachute 500 ml and 1 piece of 1 litre, 25 days ago. How much should I send this time?",
+    "lang": "en"
+   },
+   {
+    "who": "retailer",
+    "text": "Tamil please"
+   },
+   {
+    "who": "agent",
+    "text": "சரி. போன முறை Parachute 500 ml 2 pieces மற்றும் 1 litre 1 piece வாங்கினீங்க. இந்த முறை எவ்வளவு அனுப்பட்டும்?",
+    "lang": "ta",
+    "en": "Sure. Last time you took 2 pieces of Parachute 500 ml and 1 piece of 1 litre. How much should I send this time?"
+   },
+   {
+    "who": "retailer",
+    "text": "Parachute 500 ml 3 pieces"
+   },
+   {
+    "who": "agent",
+    "text": "சரி, Parachute 500 ml 3 pieces note பண்ணிட்டேன். வேறு ஏதாவது வேணுமா?",
+    "lang": "ta",
+    "en": "Done, I've noted 3 pieces of Parachute 500 ml. Anything else?"
+   },
+   {
+    "who": "retailer",
+    "text": "Hindi mein bolo"
+   },
+   {
+    "who": "agent",
+    "text": "Ji zaroor. Aur kuch chahiye?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Hindi nahi aati"
+   },
+   {
+    "who": "agent",
+    "text": "சரி. வேறு ஏதாவது வேணுமா?",
+    "lang": "ta",
+    "en": "Sure. Anything else?"
+   },
+   {
+    "who": "retailer",
+    "text": "Podhum"
+   },
+   {
+    "who": "agent",
+    "text": "ஒரு புது idea: Saffola Masala Oats 40 g. உங்களைப் போன்ற 29% கடைகள் இதை வைத்திருக்கின்றன. Trial-க்கு 12 pieces சேர்க்கட்டுமா? வேண்டாம்னாலும் பரவாயில்லை.",
+    "lang": "ta",
+    "en": "One new idea: Saffola Masala Oats 40 g. 29% of similar stores stock it. Shall I add 12 pieces as a trial? No problem if not."
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R010-01",
+   "retailer_id": "R010",
+   "distributor_id": "D005",
+   "outcome": "IN_PROGRESS",
+   "identity_verified": true,
+   "order": null,
+   "events": []
+  }
+ },
+ {
+  "id": "RX24",
+  "name": "Callback time said in the retailer's language",
+  "rid": "R010",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Callback booked for 17:00",
+    "pass": true
+   },
+   {
+    "check": "Said in Tamil: இன்று மாலை 5 மணிக்கு",
+    "pass": true
+   },
+   {
+    "check": "English meaning: today at 5 PM",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "வணக்கம்! நான் Marico-வின் AI sales assistant ஆஷா பேசுறேன். Murugan Super Bazaar-இன் Sanjay Murugan அவர்களிடம் பேசுகிறேனா? Parachute மற்றும் Saffola order-க்காக இரண்டு நிமிடம் வேண்டும்.",
+    "lang": "ta",
+    "en": "Vanakkam! This is Asha, Marico's AI sales assistant. Am I speaking with Sanjay Murugan of Murugan Super Bazaar? I'd like two minutes for your Parachute and Saffola order."
+   },
+   {
+    "who": "retailer",
+    "text": "I am busy, call me after 5"
+   },
+   {
+    "who": "agent",
+    "text": "சரி. இன்று மாலை 5 மணிக்கு திரும்ப call பண்றேன். நன்றி!",
+    "lang": "ta",
+    "en": "Of course. I'll call you back today at 5 PM. Thank you!"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R010-01",
+   "retailer_id": "R010",
+   "distributor_id": "D005",
+   "outcome": "CALLBACK_SCHEDULED",
+   "identity_verified": false,
+   "order": null,
+   "events": [
+    {
+     "type": "CALLBACK_SCHEDULED",
+     "when": "2026-11-20T17:00",
+     "reason": "Retailer busy",
+     "said": "I am busy, call me after 5"
+    }
+   ]
+  }
+ },
+ {
+  "id": "RX25",
+  "name": "Box size told in English (\"there are 24 in a box\"): computed, then confirmed",
+  "rid": "R042",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Asked to confirm 2 x 24 = 48 before booking",
+    "pass": true
+   },
+   {
+    "check": "48 pieces booked after yes",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "Namaste! Main Marico ki AI sales assistant Asha bol rahi hoon. Kya meri baat Sharma General Store ke Ramesh Sharma ji se ho rahi hai? Parachute aur Saffola ke order ke liye do minute chahiye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Yes, speaking."
+   },
+   {
+    "who": "agent",
+    "text": "Dhanyavaad Sharma ji! Pichhli baar aapne Parachute 500 ml ke 12 pieces aur 200 ml ke 8 pieces liye the, 11 din pehle. Is baar kitna bhejun?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Parachute 500 ml, 2 boxes."
+   },
+   {
+    "who": "agent",
+    "text": "2 box mein kitne pieces honge? Billing piece mein hoti hai aur Parachute 500 ml ka box conversion mere paas confirm nahi hai, isliye pieces mein bata dijiye.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "There are 24 in a box."
+   },
+   {
+    "who": "agent",
+    "text": "Yaani 2 box x 24 = 48 pieces Parachute 500 ml, sahi hai?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Yes."
+   },
+   {
+    "who": "agent",
+    "text": "Theek hai, Parachute 500 ml ke 48 pieces note kar liya. Aur kuch chahiye?",
+    "lang": "hi"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R042-01",
+   "retailer_id": "R042",
+   "distributor_id": "D001",
+   "outcome": "IN_PROGRESS",
+   "identity_verified": true,
+   "order": null,
+   "events": []
+  }
+ },
+ {
+  "id": "RX26",
+  "name": "Unanswered size question is asked again; \"10\" never changes another line",
+  "rid": "R014",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Size asked again after \"10\"",
+    "pass": true
+   },
+   {
+    "check": "Parachute 200 ml still 3",
+    "pass": true
+   },
+   {
+    "check": "10 litres booked as 2 jars of 5 litres",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "నమస్కారం! నేను Marico AI sales assistant ఆశా మాట్లాడుతున్నాను. Naidu Traders యొక్క Lakshmi Naidu గారితో మాట్లాడుతున్నానా? Parachute మరియు Livon order కోసం రెండు నిమిషాలు కావాలి.",
+    "lang": "te",
+    "en": "Namaskaram! This is Asha, Marico's AI sales assistant. Am I speaking with Lakshmi Naidu of Naidu Traders? I'd like two minutes for your Parachute and Livon order."
+   },
+   {
+    "who": "retailer",
+    "text": "Can we speak in English?"
+   },
+   {
+    "who": "agent",
+    "text": "Sure. Am I speaking with Lakshmi Naidu of Naidu Traders?",
+    "lang": "en"
+   },
+   {
+    "who": "retailer",
+    "text": "Yes."
+   },
+   {
+    "who": "agent",
+    "text": "Thank you, Lakshmi garu! Last time you took 17 pieces of Parachute 500 ml and 13 pieces of Parachute Advansed Jasmine 200 ml, 6 days ago. How much should I send this time?",
+    "lang": "en"
+   },
+   {
+    "who": "retailer",
+    "text": "Parachute 200 ml 3 pieces"
+   },
+   {
+    "who": "agent",
+    "text": "Done, I've noted 3 pieces of Parachute 200 ml. Anything else?",
+    "lang": "en"
+   },
+   {
+    "who": "retailer",
+    "text": "Saffola Gold 10 litre"
+   },
+   {
+    "who": "agent",
+    "text": "Which Saffola pack size: Gold 1 litre pouch or Gold 5 litre jar?",
+    "lang": "en"
+   },
+   {
+    "who": "retailer",
+    "text": "10"
+   },
+   {
+    "who": "agent",
+    "text": "Sorry, which Saffola pack size: Gold 1 litre pouch or Gold 5 litre jar?",
+    "lang": "en"
+   },
+   {
+    "who": "retailer",
+    "text": "The jar"
+   },
+   {
+    "who": "agent",
+    "text": "Done, I've noted 2 pieces of Saffola Gold 5 litre jar. Anything else?",
+    "lang": "en"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R014-01",
+   "retailer_id": "R014",
+   "distributor_id": "D006",
+   "outcome": "IN_PROGRESS",
+   "identity_verified": true,
+   "order": null,
+   "events": []
+  }
+ },
+ {
+  "id": "RX27",
+  "name": "Three items in one breath, two need a question: none is dropped",
+  "rid": "R042",
+  "pass": true,
+  "checks": [
+   {
+    "check": "Clear item booked at once, first question asked",
+    "pass": true
+   },
+   {
+    "check": "Waiting item asked right after the first answer",
+    "pass": true
+   },
+   {
+    "check": "All three lines in the order",
+    "pass": true
+   }
+  ],
+  "transcript": [
+   {
+    "who": "agent",
+    "text": "Namaste! Main Marico ki AI sales assistant Asha bol rahi hoon. Kya meri baat Sharma General Store ke Ramesh Sharma ji se ho rahi hai? Parachute aur Saffola ke order ke liye do minute chahiye the.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Haan."
+   },
+   {
+    "who": "agent",
+    "text": "Dhanyavaad Sharma ji! Pichhli baar aapne Parachute 500 ml ke 12 pieces aur 200 ml ke 8 pieces liye the, 11 din pehle. Is baar kitna bhejun?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Saffola Gold 1 litre ke 20, Nihar Shanti 100 ml ke 10 aur Parachute 500 ml ke 12"
+   },
+   {
+    "who": "agent",
+    "text": "Parachute 500 ml ke 12 pieces note kar liya. Saffola Gold 1 litre pouch ke abhi distributor ke paas sirf 13 pieces hain. Abhi 13 bhej doon aur baaki 7 ke liye follow-up rakhun, ya quantity badalni hai?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Haan, baaki baad mein bhej dena"
+   },
+   {
+    "who": "agent",
+    "text": "Baaki 7 ka follow-up rakh diya. Saffola Gold 1 litre pouch ke 13 pieces note kar liya. Maaf kijiye, Nihar Shanti Amla 100 ml abhi distributor ke paas out of stock hai. Nihar Shanti Amla 300 ml available hai, chahein to woh le sakte hain, warna koi baat nahi.",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "Haan woh bhej do"
+   },
+   {
+    "who": "agent",
+    "text": "Nihar Shanti Amla 300 ml ke kitne pieces bhejun?",
+    "lang": "hi"
+   },
+   {
+    "who": "retailer",
+    "text": "8"
+   },
+   {
+    "who": "agent",
+    "text": "Theek hai, Nihar Shanti Amla 300 ml ke 8 pieces note kar liya. Aur kuch chahiye?",
+    "lang": "hi"
+   }
+  ],
+  "record": {
+   "call_id": "CALL-20261120-R042-01",
+   "retailer_id": "R042",
+   "distributor_id": "D001",
+   "outcome": "IN_PROGRESS",
+   "identity_verified": true,
+   "order": null,
+   "events": [
+    {
+     "type": "BACKORDER_FOLLOWUP",
+     "sku_id": "P006",
+     "quantity": 7,
+     "note": "Balance to follow when distributor restocks"
+    }
+   ]
+  }
  },
  {
   "id": "RX5",

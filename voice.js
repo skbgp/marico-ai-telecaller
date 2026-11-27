@@ -1,7 +1,11 @@
-/* voice.js - makes the agent's Hindi replies sound natural in browser text-to-speech.
-   The agent writes Hindi in Latin letters (Hinglish). Hindi voices read Latin text with an
+/* voice.js - makes the agent's replies sound natural in browser text-to-speech.
+   Hindi: the agent writes Hindi in Latin letters (Hinglish). Hindi voices read Latin text with an
    English accent, so before speaking we convert known words to Devanagari, read rupee
-   amounts and pack sizes the Indian way, drop order IDs, and pick the best Hindi voice. */
+   amounts and pack sizes the Indian way, drop order IDs, and pick the best Hindi voice.
+   Regional languages (Tamil, Telugu, Kannada, Malayalam, Bengali, Marathi, Gujarati, Odia, Assamese):
+   the line is already in its own script; we pick a female voice for that language (Microsoft Edge has
+   them for Tamil, Telugu, Kannada, Malayalam, Bengali, Marathi and Gujarati). With no such voice, the
+   English meaning of the line is read instead (Marathi falls back to the Hindi voice, which reads Devanagari). */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else root.VoiceHi = factory();
@@ -31,7 +35,7 @@
     marico: 'मैरिको', asha: 'आशा', parachute: 'पैराशूट', coconut: 'कोकोनट', oil: 'ऑयल', advansed: 'एडवांस्ड', jasmine: 'जैस्मिन', hair: 'हेयर', saffola: 'सफ़ोला', gold: 'गोल्ड', edible: 'एडिबल', active: 'एक्टिव', masala: 'मसाला', oats: 'ओट्स', nihar: 'निहार', naturals: 'नेचुरल्स', shanti: 'शांति', badam: 'बादाम', amla: 'आंवला', livon: 'लिवॉन', serum: 'सीरम', styler: 'स्टाइलर', gel: 'जेल', set: 'सेट', wet: 'वेट', deodorant: 'डिओडोरेंट', spray: 'स्प्रे', dabur: 'डाबर',
     // shop words and the names in the retailer master
     store: 'स्टोर', stores: 'स्टोर्स', kirana: 'किराना', traders: 'ट्रेडर्स', general: 'जनरल', provision: 'प्रोविज़न', super: 'सुपर', bazaar: 'बाज़ार', mart: 'मार्ट',
-    sharma: 'शर्मा', vijay: 'विजय', gupta: 'गुप्ता', kiran: 'किरण', verma: 'वर्मा', suresh: 'सुरेश', yadav: 'यादव', ashok: 'अशोक', patel: 'पटेल', deepak: 'दीपक', shah: 'शाह', mahesh: 'महेश', agarwal: 'अग्रवाल', prakash: 'प्रकाश', patil: 'पाटिल', mohan: 'मोहन', deshmukh: 'देशमुख', rajesh: 'राजेश', murugan: 'मुरुगन', sanjay: 'संजय', selvam: 'सेल्वम', gopal: 'गोपाल', kannan: 'कन्नन', dinesh: 'दिनेश', reddy: 'रेड्डी', manoj: 'मनोज', naidu: 'नायडू', lakshmi: 'लक्ष्मी', gowda: 'गौड़ा', anil: 'अनिल', nair: 'नायर', ravi: 'रवि', das: 'दास', meena: 'मीना', mohanty: 'मोहंती', sunil: 'सुनील', singh: 'सिंह', arun: 'अरुण', bora: 'बोरा', ramesh: 'रमेश', mishra: 'मिश्रा', jain: 'जैन', pandey: 'पांडे', khan: 'ख़ान', desai: 'देसाई', mehta: 'मेहता', tiwari: 'तिवारी', kulkarni: 'कुलकर्णी', jadhav: 'जाधव', arumugam: 'अरुमुगम', rajendran: 'राजेंद्रन', prasad: 'प्रसाद', rao: 'राव', shetty: 'शेट्टी', menon: 'मेनन', ghosh: 'घोष', sahu: 'साहू', chauhan: 'चौहान', gogoi: 'गोगोई', saxena: 'सक्सेना', bansal: 'बंसल', joshi: 'जोशी', pawar: 'पवार', varma: 'वर्मा', hegde: 'हेगड़े', pillai: 'पिल्लई', saha: 'साहा', behera: 'बेहरा', baruah: 'बरुआ', rastogi: 'रस्तोगी'
+    saheb: 'साहेब', tai: 'ताई', bhai: 'भाई', ben: 'बेन', sharma: 'शर्मा', vijay: 'विजय', gupta: 'गुप्ता', kiran: 'किरण', verma: 'वर्मा', suresh: 'सुरेश', yadav: 'यादव', ashok: 'अशोक', patel: 'पटेल', deepak: 'दीपक', shah: 'शाह', mahesh: 'महेश', agarwal: 'अग्रवाल', prakash: 'प्रकाश', patil: 'पाटिल', mohan: 'मोहन', deshmukh: 'देशमुख', rajesh: 'राजेश', murugan: 'मुरुगन', sanjay: 'संजय', selvam: 'सेल्वम', gopal: 'गोपाल', kannan: 'कन्नन', dinesh: 'दिनेश', reddy: 'रेड्डी', manoj: 'मनोज', naidu: 'नायडू', lakshmi: 'लक्ष्मी', gowda: 'गौड़ा', anil: 'अनिल', nair: 'नायर', ravi: 'रवि', das: 'दास', meena: 'मीना', mohanty: 'मोहंती', sunil: 'सुनील', singh: 'सिंह', arun: 'अरुण', bora: 'बोरा', ramesh: 'रमेश', mishra: 'मिश्रा', jain: 'जैन', pandey: 'पांडे', khan: 'ख़ान', desai: 'देसाई', mehta: 'मेहता', tiwari: 'तिवारी', kulkarni: 'कुलकर्णी', jadhav: 'जाधव', arumugam: 'अरुमुगम', rajendran: 'राजेंद्रन', prasad: 'प्रसाद', rao: 'राव', shetty: 'शेट्टी', menon: 'मेनन', ghosh: 'घोष', sahu: 'साहू', chauhan: 'चौहान', gogoi: 'गोगोई', saxena: 'सक्सेना', bansal: 'बंसल', joshi: 'जोशी', pawar: 'पवार', varma: 'वर्मा', hegde: 'हेगड़े', pillai: 'पिल्लई', saha: 'साहा', behera: 'बेहरा', baruah: 'बरुआ', rastogi: 'रस्तोगी'
   };
 
   function hindiSpeech(text) {
@@ -63,6 +67,17 @@
     t = t.replace(/!+/g, '.').replace(/:(?!\d)/g, ',');   // some voices read punctuation out as words
     return t.replace(/\s{2,}/g, ' ').trim();
   }
+  // regional-language line: rupees in words, no order or ticket IDs, no punctuation read out
+  const RUPEE = { ta: 'ரூபாய்', te: 'రూపాయలు', kn: 'ರೂಪಾಯಿ', ml: 'രൂപ', bn: 'টাকা', mr: 'रुपये', gu: 'રૂપિયા', or: 'ଟଙ୍କା', as: 'টকা' };
+  const REGIONAL = Object.keys(RUPEE);
+  function localSpeech(text, lang) {
+    let t = String(text);
+    t = t.replace(/\b(?:order\s+)?ORD-[\w-]+/gi, 'order').replace(/\bCMP-[\w-]+\s*/g, '');
+    t = t.replace(/(\d),(?=\d)/g, '$1').replace(/(?:₹|Rs\.?\s?)\s?(\d+)/g, (m, n) => n + ' ' + (RUPEE[lang] || 'rupees'));
+    t = t.replace(/(\d+)\s*[x×]\s*(?=\d)/g, '$1 into ').replace(/\s×\s/g, ' into ').replace(/\s=\s/g, ', ');
+    t = t.replace(/!+/g, '.').replace(/:(?!\d)/g, ',').replace(/["“”‘’*_#]/g, '');
+    return t.replace(/\s{2,}/g, ' ').trim();
+  }
   function speechText(text, lang) {
     if (!text) return '';
     if (/[ऀ-ॿ]/.test(text) && !/[A-Za-z]{3,}/.test(text)) return text;   // already Devanagari
@@ -76,14 +91,15 @@
   }
   // Asha is a woman and her Hindi lines use female forms (bol rahi hoon, samajh gayi, karungi),
   // so a female voice is always preferred; a male voice is used only if nothing else exists.
-  const FEMALE = /Swara|Kalpana|Lekha|Neerja|Heera|Veena|Ananya|Aditi|Samantha|Zira|Google|female/i;
-  const MALE = /Madhur|Hemant|Prabhat|Rishi|Ravi|Aarav|Kunal|Rehaan|male/i;
+  // female and male voice names (Windows / Edge / macOS / Chrome), Hindi, English and the regional languages
+  const FEMALE = /Swara|Kalpana|Lekha|Neerja|Heera|Veena|Ananya|Aditi|Samantha|Zira|Google|female|Pallavi|Shruti|Sapna|Sobhana|Tanishaa|Aarohi|Dhwani|Subhasini|Yashica|Vani|Chitra|Valli|Kalyani|Smita/i;
+  const MALE = /Madhur|Hemant|Prabhat|Rishi|Ravi|Aarav|Kunal|Rehaan|male|Valluvar|Mohan|Gagan|Midhun|Bashkar|Manohar|Niranjan|Sukant|Priyom/i;
   function rankVoice(v, lang) {
     const n = v.name, l = (v.lang || '').replace('_', '-').toLowerCase();
-    if (lang === 'en' ? !l.startsWith('en') : !l.startsWith('hi')) return -1;
+    if (!l.startsWith(lang === 'en' ? 'en' : lang)) return -1;
     if (MALE.test(n) && !/female/i.test(n)) return 0.5;
     let s = 1;
-    if (lang === 'en' && l === 'en-in') s += 2;             // Indian English accent preferred among female voices
+    if (lang === 'en' && l === 'en-in') s += 5;             // Indian English accent preferred, even over Google US English
     if (FEMALE.test(n)) s += 10;
     if (/Natural|Neural|Online/i.test(n)) s += 4;          // Edge: Microsoft Swara / Neerja (Natural)
     if (/Google/i.test(n)) s += 3;                          // Chrome: Google हिन्दी (female)
@@ -126,16 +142,18 @@
 
   // speak with the browser voice. onDone runs once when the last sentence has been spoken
   // (or at once if nothing can be spoken); onVoice gets the name of the voice used ('' if none).
-  function say(text, lang, onDone, onVoice) {
+  // en: English meaning of a regional-language line, read when there is no voice for that language
+  function say(text, lang, onDone, onVoice, en) {
     let doneCalled = false;
     const done = () => { if (!doneCalled) { doneCalled = true; if (onDone) onDone(); } };
     if (typeof speechSynthesis === 'undefined' || !text) { if (onVoice) onVoice(''); setTimeout(done, 0); return; }
     const id = ++sayId;
     whenVoicesReady(() => {
       if (id !== sayId) { done(); return; }   // stopped while waiting
+      const regional = REGIONAL.includes(lang);
       if (LIMITED) {
         const dv = defaultVoice(), dvHindi = !!dv && /^hi/i.test(dv.lang);
-        const tl = lang !== 'en' && dvHindi ? speechText(text, 'hi') : englishSpeech(text);
+        const tl = regional ? englishSpeech(en || text) : lang !== 'en' && dvHindi ? speechText(text, 'hi') : englishSpeech(text);
         if (onVoice) onVoice(dv ? dv.name : '', { limited: true });
         speechSynthesis.cancel();
         const ps = chunks(tl);
@@ -148,19 +166,24 @@
         if (!ps.length) setTimeout(done, 0); else setTimeout(done, 1500 + tl.length * 70);
         return;
       }
-      const listed = speechSynthesis.getVoices().length > 0;
-      let v = pickVoice(lang === 'en' ? 'en' : 'hi'), t, uLang;
-      if (lang === 'en') { t = englishSpeech(text); uLang = v ? v.lang : 'en-IN'; }
+      const listed = speechSynthesis.getVoices().length > 0, info = {};
+      let v = pickVoice(regional ? lang : lang === 'en' ? 'en' : 'hi'), t, uLang;
+      if (regional) {
+        if (v) { t = localSpeech(text, lang); uLang = v.lang; }
+        else if (lang === 'mr' && pickVoice('hi')) { v = pickVoice('hi'); t = speechText(text, 'hi'); uLang = v.lang; info.fallback = 'hi'; }   // Hindi voice reads Marathi Devanagari
+        else { v = pickVoice('en'); t = englishSpeech(en || text); uLang = v ? v.lang : 'en-IN'; info.fallback = 'en'; }   // no voice for this language: read the English meaning
+      }
+      else if (lang === 'en') { t = englishSpeech(text); uLang = v ? v.lang : 'en-IN'; }
       else if (v) { t = speechText(text, 'hi'); uLang = v.lang; }
       else if (!listed) { t = speechText(text, 'hi'); uLang = 'hi-IN'; }   // voice list never arrived: let the system use its Hindi voice
       else { v = pickVoice('en'); t = englishSpeech(text); uLang = v ? v.lang : 'en-IN'; }   // no Hindi voice installed: an English voice reads the Hinglish
-      if (onVoice) onVoice(v ? v.name : '');
+      if (onVoice) onVoice(v ? v.name : '', info);
       speechSynthesis.cancel();
       const parts = chunks(t);
       if (!parts.length) { setTimeout(done, 0); return; }
       parts.forEach((c, i) => {
         const u = new SpeechSynthesisUtterance(c);
-        u.lang = uLang; if (v) u.voice = v; u.rate = lang === 'en' ? 1 : 0.95;
+        u.lang = uLang; if (v) u.voice = v; u.rate = lang === 'en' || info.fallback === 'en' ? 1 : 0.95;
         if (i === parts.length - 1) { u.onend = done; u.onerror = done; }
         speechSynthesis.speak(u);
       });
@@ -168,5 +191,5 @@
       setTimeout(done, 1500 + t.length * 70);
     });
   }
-  return { speechText, hindiSpeech, englishSpeech, pickVoice, say, stop, warmUp, chunks, LIMITED, WORDS: W };
+  return { speechText, hindiSpeech, englishSpeech, localSpeech, pickVoice, say, stop, warmUp, chunks, LIMITED, WORDS: W };
 });

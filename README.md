@@ -2,29 +2,29 @@
 
 Marico x IIT Madras, AI-Powered General Trade Telecalling build challenge. Shubham Kumar, M.Tech CSE, IIT Madras (CS25M046).
 
-**Live demo:** https://skbgp.github.io/marico-ai-telecaller/ (open in Chrome or Edge)
+**Live demo:** https://skbgp.github.io/marico-ai-telecaller/ (open in Microsoft Edge to hear every language's voice, or Chrome)
 
 **Slides:** [Solution Presentation (5 slides)](slides/Solution_Presentation_Shubham_Kumar_CS25M046.pdf), [Scalability Approach (3 slides)](slides/Scalability_Approach_Shubham_Kumar_CS25M046.pdf)
 
 ## How to use the demo
 
 1. Pick a retailer from the call list (sorted by call priority) and click **Start call**. Asha (the AI agent) dials, the retailer picks up, and she speaks first.
-2. Answer as the retailer: type, tap the mic and talk (Chrome or Edge, Hindi or English), or click one of the test replies under the box. The test replies change with the stage of the call.
+2. Answer as the retailer: type, tap the mic and talk (Chrome or Edge), or click one of the test replies under the box. The test replies change with the stage of the call. Asha speaks the retailer's own language (Hindi, English, Tamil, Telugu, Kannada, Malayalam, Bengali, Marathi, Gujarati, Odia or Assamese, from the retailer master); under each regional-language line the screen shows its English meaning.
 3. Each turn shows what the agent did (identity confirmed, line added, stock short, order read back...) and then her reply. The order builds on the right as lines are booked; the call ends with a summary (order placed, callback booked, complaint logged...).
-4. The right panel also has the pre-call analysis (why this retailer, what and how much to suggest), every tool call, the final JSON record, and a **Tests** tab that runs all 46 scenarios in the browser.
+4. The right panel also has the pre-call analysis (why this retailer, what and how much to suggest), every tool call, the final JSON record, and a **Tests** tab that runs all 52 scenarios in the browser.
 
-Voice: the agent speaks with the browser's own female Hindi or English voice (best in Chrome or Edge; Edge's natural voices sound best). Her Hindi replies are written in Latin letters on screen, so voice.js converts them to Devanagari before speaking, reads ₹ amounts and pack sizes the Indian way, and skips order and complaint IDs. The mic is hands-free: after Asha finishes a reply it listens again, until you tap it off. Note: the built-in browser of the Claude desktop app can only use the computer's default voice (often male), so open the demo in Chrome, Edge or Safari to hear Asha's female voice.
+Voice: the agent speaks with the browser's own female voice for the call's language. Hindi: her replies are written in Latin letters on screen, so voice.js converts them to Devanagari before speaking, reads ₹ amounts and pack sizes the Indian way, and skips order and complaint IDs. Regional languages: Microsoft Edge has female voices for Tamil, Telugu, Kannada, Malayalam, Bengali, Marathi and Gujarati, so open the demo in **Edge** to hear them. Where the browser has no voice for the language (Chrome on most laptops, and Odia and Assamese everywhere), Asha reads the English meaning of the line instead and the page says so; Marathi falls back to the Hindi voice, which reads Devanagari. The mic is hands-free: after Asha finishes a reply it listens again, until you tap it off. Note: the built-in browser of the Claude desktop app can only use the computer's default voice (often male), so open the demo in Edge, Chrome or Safari.
 
-On GitHub Pages the agent runs in rule-based mode: Hinglish + English, a greeting in the retailer's language, and yes / no / "that's all" understood in all 10 languages of the data (for example Tamil "aamaa", "illai", "podhum"; these show as test replies for those retailers). LLM mode (Claude with tool calling, for free speech in any language) is in the same code but needs Claude's runtime, so it is switched off here. Both modes use the same 16 tools and checks.
+On GitHub Pages the agent runs in rule-based mode. It speaks the retailer's preferred language for the whole call: all 60 of its lines are written in each of the nine regional languages (languages.js), with product names, pack sizes and numbers kept as retailers say them ("Parachute 500 ml 15 pieces"), and the owner addressed the local way (Murugan sir, Lakshmi garu, Patil saheb, Meena di). It understands yes / no / "that's all" in all 10 languages (for example Tamil "aamaa", "illai", "podhum"; these show as test replies for those retailers), and switches language when asked ("Can we speak in English?", "Tamil please", "Hindi nahi aati"), asking its open question again in the new language and keeping the order. The regional lines are drafted for the prototype; before go-live each language is reviewed by native-speaker sales staff. LLM mode (Claude with tool calling, for free speech in any language) is in the same code but needs Claude's runtime, so it is switched off here. Both modes use the same 16 tools and checks.
 
 ## Tests
 
 ```
-node run_tests.js        46 scenarios: CS01-CS19 from the workbook, SX1-SX6 surprise scenarios from the brief, RX1-RX21 extra
-node stress_test.js      simple order flow for all 100 retailers in Hindi and English, plus 1,200 random calls
+node run_tests.js        52 scenarios: CS01-CS19 from the workbook, SX1-SX6 surprise scenarios from the brief, RX1-RX27 extra
+node stress_test.js      order flow for all 100 retailers in Hindi, English and their own words for yes / no, plus 1,500 random calls
 ```
 
-Each scenario checks the call record against its pass criteria. The stress test checks every call for crashes, broken replies, lines above distributor stock, discounts, and orders placed without a read-back.
+Each scenario checks the call record against its pass criteria (RX1 and RX22-RX24 run whole calls in the regional languages). The stress test checks every call for crashes, broken replies, lines above distributor stock, discounts, and orders placed without a read-back, and every regional-language line (about 7,500) for the right script, no Hindi left in it, and a complete English meaning.
 
 ## Business impact (what the pilot measures)
 
@@ -49,10 +49,11 @@ Each stage starts only after the previous one passes its gate (order accuracy, p
 ## Files
 
 ```
-index.html, agent_core.js, scenarios.js, voice.js, marico_data.json   the web app (static, no server needed)
+index.html, agent_core.js, languages.js, scenarios.js, voice.js, marico_data.json   the web app (static, no server needed)
 agent_core.js         planner + 16 tools with checks + rule-based dialogue manager
-voice.js              Hindi speech: Hinglish to Devanagari, female Hindi voice, sentence-by-sentence playback
-scenarios.js          the 46 test scenarios
+languages.js          Asha's lines in Tamil, Telugu, Kannada, Malayalam, Bengali, Marathi, Gujarati, Odia and Assamese
+voice.js              speech: Hinglish to Devanagari for Hindi, a female voice per language, English meaning when none
+scenarios.js          the 52 test scenarios
 run_tests.js          test runner (add --verbose for transcripts)
 stress_test.js        stress test
 test_results.json     last test run with full transcripts

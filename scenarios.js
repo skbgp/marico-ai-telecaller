@@ -102,9 +102,12 @@ const TESTS = [
     checks: (c, r) => [['No order', !r.order], ['Callback tomorrow morning', ev(r, 'CALLBACK_SCHEDULED').some(e => /2026-11-21T10:00/.test(e.when))]] },
 
   /* ---- extra robustness checks ---- */
-  { id: 'RX1', name: 'Tamil retailer: greeting in own language', rid: 'R010',
-    turns: [T('Yes, speaking.')],
-    checks: (c) => [['Greets in Tamil', /Vanakkam/.test(c.transcript[0].text)]] },
+  { id: 'RX1', name: 'Tamil retailer: whole call in Tamil, English meaning under every line', rid: 'R010',
+    turns: [T('Yes, speaking.'), T('Parachute 500 ml 3 pieces and 1 litre 1 piece'), T('Podhum'), T('Illai'), T('Aamaa')],
+    checks: (c, r) => { const a = c.transcript.filter(t => t.who === 'agent'); return [['Greets in Tamil (வணக்கம்)', /^வணக்கம்/.test(a[0].text)],
+      ['Every line in Tamil script', a.every(t => t.lang === 'ta' && /[\u0B80-\u0BFF]/.test(t.text))],
+      ['Every line has its English meaning', a.every(t => t.en && !/[\u0900-\u0DFF]/.test(t.en))],
+      ['Owner addressed the Tamil way (Murugan sir)', a.some(t => /Murugan sir/.test(t.text))], ['Order placed', r.outcome === 'ORDER_CONFIRMED']]; } },
   { id: 'RX2', name: 'Price question answered from master data', rid: 'R042',
     turns: [T('Haan.'), T('Parachute 500 ml ka rate kya hai?')],
     checks: (c) => [['Billing price, MRP and margin quoted', agentSaid(c, /196.*230.*34/)]] },
@@ -189,6 +192,42 @@ const TESTS = [
         return [`${lang}: "${yes}" / "${no}" / "${enough}" understood, order placed`, idOk && atReadback && c.S.record().outcome === 'ORDER_CONFIRMED'];
       });
     } },
+  { id: 'RX22', name: 'Each regional language: whole order taken in that language', custom: true,
+    run: () => {
+      const W = { Tamil: ['R010', 'Aamaa', 'Illai', 'Podhum', /[\u0B80-\u0BFF]/], Telugu: ['R013', 'Avunu', 'Vaddu', 'చాలు', /[\u0C00-\u0C7F]/],
+        Kannada: ['R015', 'Haudu', 'Beda', 'Saaku', /[\u0C80-\u0CFF]/], Malayalam: ['R016', 'Athe', 'Venda', 'Mathi', /[\u0D00-\u0D7F]/],
+        Bengali: ['R017', 'Hyan', 'Lagbe na', 'Eituku', /[\u0980-\u09FF]/], Marathi: ['R008', 'Chalel', 'Nako', 'Evdhach', /[\u0900-\u097F]/],
+        Gujarati: ['R005', 'Haa', 'Nathi joitu', 'Atlu j', /[\u0A80-\u0AFF]/], Odia: ['R018', 'Hau', 'Darkar nahi', 'Etiki', /[\u0B00-\u0B7F]/],
+        Assamese: ['R020', 'Hoi', 'Nalage', 'Imanei', /[\u0980-\u09FF]/] };
+      return Object.entries(W).map(([lang, [rid, yes, no, enough, script]]) => {
+        const c = new A.Conversation(A.buildIndex(DATA), rid); c.start();
+        [yes, 'Same as last time please', enough, no, yes].forEach(x => { if (!c.S.closed) c.hear(x); });
+        const a = c.transcript.filter(t => t.who === 'agent');
+        const ok = a.every(t => script.test(t.text) && t.en && !/[\u0900-\u0DFF]/.test(t.en) && !/\b(aur|kar diya|bhej doon|koi baat nahi)\b/i.test(t.text));
+        return [`${lang}: every line in ${lang} with its English meaning, order placed`, ok && c.S.record().outcome === 'ORDER_CONFIRMED'];
+      });
+    } },
+  { id: 'RX23', name: 'Language on request: English, back to Tamil, Hindi, "Hindi nahi aati"', rid: 'R010',
+    turns: [T('Can we speak in English?'), T('Yes, speaking.'), T('Tamil please'), T('Parachute 500 ml 3 pieces'), T('Hindi mein bolo'), T('Hindi nahi aati'), T('Podhum')],
+    checks: (c, r) => { const a = c.transcript.filter(t => t.who === 'agent').map(t => t.lang); return [['Replies follow the asks: ta, en, en, ta, ta, hi, ta, ta', a.join(',') === 'ta,en,en,ta,ta,hi,ta,ta'],
+      ['Open question asked again in the new language', /^சரி\. போன முறை/.test(c.transcript.filter(t => t.who === 'agent')[3].text)], ['Order kept across switches', c.S.cart.some(l => l.sku === 'P003' && l.qty === 3)]]; } },
+  { id: 'RX24', name: 'Callback time said in the retailer\'s language', rid: 'R010',
+    turns: [T('I am busy, call me after 5')],
+    checks: (c, r) => { const a = c.transcript.filter(t => t.who === 'agent').slice(-1)[0]; return [['Callback booked for 17:00', r.events.some(e => e.type === 'CALLBACK_SCHEDULED' && /T17:00/.test(e.when))],
+      ['Said in Tamil: இன்று மாலை 5 மணிக்கு', /இன்று மாலை 5 மணிக்கு/.test(a.text)], ['English meaning: today at 5 PM', /today at 5 PM/.test(a.en)]]; } },
+  { id: 'RX25', name: 'Box size told in English ("there are 24 in a box"): computed, then confirmed', rid: 'R042',
+    turns: [T('Yes, speaking.'), T('Parachute 500 ml, 2 boxes.'), T('There are 24 in a box.'), T('Yes.')],
+    checks: (c, r) => [['Asked to confirm 2 x 24 = 48 before booking', /48 pieces/.test(c.snap[3].text) && c.snap[3].cart.length === 0],
+      ['48 pieces booked after yes', c.S.cart.some(l => l.sku === 'P003' && l.qty === 48)]] },
+  { id: 'RX26', name: 'Unanswered size question is asked again; "10" never changes another line', rid: 'R014',
+    turns: [T('Can we speak in English?'), T('Yes.'), T('Parachute 200 ml 3 pieces'), T('Saffola Gold 10 litre'), T('10'), T('The jar')],
+    checks: (c, r) => [['Size asked again after "10"', /^Sorry, which Saffola pack size/.test(c.snap[5].text)], ['Parachute 200 ml still 3', c.S.cart.some(l => l.sku === 'P002' && l.qty === 3)],
+      ['10 litres booked as 2 jars of 5 litres', c.S.cart.some(l => l.sku === 'P007' && l.qty === 2)]] },
+  { id: 'RX27', name: 'Three items in one breath, two need a question: none is dropped', rid: 'R042',
+    turns: [T('Haan.'), T('Saffola Gold 1 litre ke 20, Nihar Shanti 100 ml ke 10 aur Parachute 500 ml ke 12'), T('Haan, baaki baad mein bhej dena'), T('Haan woh bhej do'), T('8')],
+    checks: (c, r) => [['Clear item booked at once, first question asked', c.snap[2].cart.some(l => l.sku === 'P003' && l.qty === 12) && /sirf 13 pieces/.test(c.snap[2].text)],
+      ['Waiting item asked right after the first answer', /out of stock/.test(c.snap[3].text) && c.snap[3].cart.some(l => l.sku === 'P006' && l.qty === 13)],
+      ['All three lines in the order', ['P003', 'P006', 'P013'].every(k => c.S.cart.some(l => l.sku === k))]] },
   { id: 'RX5', name: 'Planner skips do-not-call retailers', custom: true,
     run: () => { const idx = A.buildIndex(DATA); const plan = A.dailyCallPlan(idx); const dnc = plan.filter(p => p.decision === 'DO_NOT_CALL').map(p => p.rid);
       return [['R001, R025, R082 never called', ['R001', 'R025', 'R082'].every(x => dnc.includes(x)) && dnc.length === 3]]; } },

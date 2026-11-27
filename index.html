@@ -6,7 +6,7 @@
 <title>Marico AI Telecaller Prototype</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%231f3a5f'/%3E%3Cpath d='M5 3.2l1.9 1.9-1 1.5c.6 1.3 1.6 2.3 2.9 2.9l1.5-1 1.9 1.9-1.2 1.6C7.4 11.6 4.6 8.8 4.2 4.6z' fill='white'/%3E%3C/svg%3E">
 <style>
-body{margin:0;background:#f3f4f6;color:#222;font:14px/1.45 "Segoe UI",Roboto,Arial,sans-serif;overflow-x:hidden}
+body{margin:0;background:#f3f4f6;color:#222;font:14px/1.45 "Segoe UI","Nirmala UI",Roboto,"Noto Sans",Arial,sans-serif;overflow-x:hidden}
 *{box-sizing:border-box;min-width:0}
 html,body{height:100%}
 h1,h2,h3{margin:0;font-weight:600}
@@ -50,6 +50,7 @@ input,select{border:1px solid #b9bec7;border-radius:4px;padding:6px 8px;backgrou
 .msg{max-width:min(80%,600px);padding:7px 10px;border-radius:6px;border:1px solid #d6e2f3}
 .msg.a{background:#eef4fc;align-self:flex-start}
 .msg.r{background:#f6f6f6;border-color:#ddd;align-self:flex-end}
+.msg .tr{margin-top:4px;padding-top:3px;border-top:1px dashed #c3d3ea;font-size:12px;color:#5f6b7a}
 .msg .by{display:flex;gap:6px;align-items:baseline;font-size:11px;color:#555;font-weight:600}
 .msg .by .role{font-weight:400;color:#888}
 .msg .by .tm{margin-left:auto;padding-left:14px;font-weight:400;color:#999;font-variant-numeric:tabular-nums}
@@ -124,7 +125,7 @@ details summary{cursor:pointer}
     <select id="pick" aria-label="Retailer"></select>
     <div class="seg" role="group" aria-label="Agent brain">
       <button id="m-claude" aria-pressed="false" title="LLM mode: Claude parses free speech and calls the same tool functions">LLM mode</button>
-      <button id="m-rules" aria-pressed="true" title="Rule-based mode: Hinglish/English parser, works offline">Rule-based</button>
+      <button id="m-rules" aria-pressed="true" title="Rule-based mode: speaks the retailer's language (all 10), works offline">Rule-based</button>
     </div>
     <label class="tog"><input type="checkbox" id="voice" checked> Voice output</label> <span id="voiceName" class="note" style="margin-left:4px"></span>
   </div>
@@ -161,14 +162,15 @@ details summary{cursor:pointer}
     <div class="tab" id="t-tools" hidden></div>
     <div class="tab" id="t-json" hidden></div>
     <div class="tab" id="t-tests" hidden>
-      <div class="row"><button class="primary" id="runTests">Run tests</button><span class="why" id="testSum">CS01-CS19 from the workbook, SX1-SX6 surprise scenarios from the brief, RX1-RX21 extra checks. Uses the rule-based engine.</span></div>
+      <div class="row"><button class="primary" id="runTests">Run tests</button><span class="why" id="testSum">CS01-CS19 from the workbook, SX1-SX6 surprise scenarios from the brief, RX1-RX27 extra checks (RX1 and RX22-RX24: whole calls in the regional languages). Uses the rule-based engine.</span></div>
       <div id="testOut"></div>
     </div>
   </aside>
 </main>
-<script src="agent_core.js?v=20261127-1"></script>
-<script src="scenarios.js?v=20261127-1"></script>
-<script src="voice.js?v=20261127-1"></script>
+<script src="languages.js?v=20261127-2"></script>
+<script src="agent_core.js?v=20261127-2"></script>
+<script src="scenarios.js?v=20261127-2"></script>
+<script src="voice.js?v=20261127-2"></script>
 <script>
 {
 const $ = s => document.querySelector(s);
@@ -183,6 +185,8 @@ const elapsed = () => !t0 ? 0 : Math.max(0, ((callState === 'ended' ? tEnd : Dat
 const fmtWhen = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso || ''); if (!m) return iso || ''; const h = +m[4];
   return `${+m[3]} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][+m[2] - 1]}, ${h % 12 || 12}:${m[5]} ${h >= 12 ? 'pm' : 'am'}`; };
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+const LG = window.AgentLanguages || { LOCAL: {}, CODE: {} };   // the nine regional languages Asha speaks besides Hindi and English
+const langName = code => LG.LOCAL[code] || (code === 'hi' ? 'Hindi' : 'English');
 
 const CHIPS = ['Haan bataiye', 'Parachute 500 ml ke 15 aur 200 ml ke 10', 'Saffola Gold 1 litre ke 20', '2 box bhej do', 'Nahi, 10 nahi 15 kar do', 'Bahut mehenga hai',
   'Bas itna hi', 'Haan, confirm kar dijiye', 'Thoda discount do', 'Can we speak in English?', 'Abhi busy hoon, 5 baje ke baad call karna',
@@ -202,7 +206,7 @@ const CH = {
   box: { hi: ['Ek box mein 24 hote hain', 'Pata nahi', '24 pieces'], en: ['There are 24 in a box', "I don't know", '24 pieces'] },
   boxConfirm: { hi: ['Haan, sahi hai', 'Nahi, 20 pieces'], en: ['Yes, correct', 'No, 20 pieces'] },
   alt: { hi: ['Haan, woh bhej do', 'Nahi, rehne do'], en: ['Yes, send that', 'No, leave it'] },
-  bigConfirm: { hi: ['Haan, utna hi', 'Nahi, 20 hi bhejo'], en: ['Yes, that many', 'No, make it 20'] },
+  bigConfirm: { hi: ['Haan, utna hi', 'Nahi, {u} hi bhejo'], en: ['Yes, that many', 'No, make it {u}'] },
   litreChoice: { hi: ['Ek jar', 'Pouch wala'], en: ['One jar', 'Pouches'] },
   echo: { hi: ['Haan', 'Nahi'], en: ['Yes', 'No'] },
   offerHuman: { hi: ['Haan, karwa do', 'Nahi'], en: ['Yes please', 'No'] },
@@ -215,7 +219,6 @@ const CH = {
 const NATIVE = { Tamil: ['Aamaa', 'Illai', 'Podhum'], Telugu: ['Avunu', 'Vaddu', 'చాలు'], Kannada: ['Haudu', 'Beda', 'Saaku'], Malayalam: ['Athe', 'Venda', 'Mathi'],
   Bengali: ['Hyan', 'Lagbe na', 'Eituku'], Marathi: ['Chalel', 'Nako', 'Evdhach'], Gujarati: ['Haa', 'Nathi joitu', 'Atlu j'], Odia: ['Hau', 'Darkar nahi', 'Etiki'], Assamese: ['Hoi', 'Nalage', 'Imanei'] };
 
-const LANGCODE = { Hindi: 'hi-IN', Gujarati: 'gu-IN', Marathi: 'mr-IN', Tamil: 'ta-IN', Telugu: 'te-IN', Kannada: 'kn-IN', Malayalam: 'ml-IN', Bengali: 'bn-IN', Odia: 'or-IN', Assamese: 'as-IN' };
 
 function renderQueue() {
   const q = $('#q').value.trim().toLowerCase();
@@ -262,7 +265,7 @@ function renderWho() {
   const canTalk = callState === 'live' && conv && !conv.S.closed;
   const box = $('#txt');
   box.readOnly = !canTalk; box.classList.toggle('locked', !canTalk);
-  box.placeholder = canTalk ? 'Type the retailer\'s reply, e.g. Parachute 500 ml ke 15' : callState === 'idle' ? 'Click Start call first'
+  box.placeholder = canTalk ? 'Type the retailer\'s reply, e.g. ' + (['hi', 'mr', 'gu'].includes(conv.S.lang) ? 'Parachute 500 ml ke 15' : 'Parachute 500 ml, 15 pieces') : callState === 'idle' ? 'Click Start call first'
     : callState === 'ended' ? 'Call ended. Click Call again' : 'Connecting...';
   $('#send').disabled = !canTalk; $('#mic').disabled = !canTalk || !(dict || SR);
   $('#mic').setAttribute('aria-pressed', String(!!(handsFree || listening)));
@@ -315,7 +318,7 @@ function renderLog() {
   if (!conv) {
     const p = current();
     const warn = p.decision === 'DO_NOT_CALL' ? '<p><b>Note:</b> this retailer has Do_Not_Call_Flag = Yes, so the planner will not call. You can still start a call to test.</p>' : p.decision === 'NOT_DUE' ? `<p><b>Note:</b> not due today (${esc(p.why[0])}).</p>` : '';
-    L.innerHTML = `<div class="empty"><h3>How to try it</h3><ol><li>Pick a retailer from the call list (highest priority first; on a small screen it is the drop-down at the top).</li><li>Click <b>Start call</b>. Asha dials, the retailer picks up and she speaks first.</li><li>Answer as the retailer: type, tap the mic and talk (Chrome or Edge), or click a test reply below the box.</li><li>The order builds on the right as she books each line; every function call is in the Tool log tab.</li></ol>${warn}<p class="note">Current mode: ${mode === 'claude' ? 'LLM mode (Claude with tool calling, any of the 10 languages).' : 'Rule-based (Hinglish + English, works offline).'}${!sample ? ' LLM mode (Claude with tool calling) runs only inside Claude, so it is off on this page; its code is in index.html.' : ''}</p></div>`;
+    L.innerHTML = `<div class="empty"><h3>How to try it</h3><ol><li>Pick a retailer from the call list (highest priority first; on a small screen it is the drop-down at the top).</li><li>Click <b>Start call</b>. Asha dials, the retailer picks up and she speaks first.</li><li>Answer as the retailer: type, tap the mic and talk (Chrome or Edge), or click a test reply below the box.</li><li>The order builds on the right as she books each line; every function call is in the Tool log tab.</li><li>Asha speaks the retailer's own language: Hindi, English, or one of nine regional languages (Tamil, Telugu, Kannada, Malayalam, Bengali, Marathi, Gujarati, Odia, Assamese). Under each regional-language line you see what it means in English.</li></ol>${warn}<p class="note">Current mode: ${mode === 'claude' ? 'LLM mode (Claude with tool calling, any of the 10 languages).' : 'Rule-based (speaks the retailer\'s language, all 10 in the data; works offline).'}${!sample ? ' LLM mode (Claude with tool calling) runs only inside Claude, so it is off on this page; its code is in index.html.' : ''}</p></div>`;
     return;
   }
   const by = (name, role, at) => `<span class="by">${esc(name)}${role ? ` <span class="role">${esc(role)}</span>` : ''}<span class="tm">${at !== undefined ? mmss(at) : ''}</span></span>`;
@@ -326,7 +329,8 @@ function renderLog() {
     if (t.who === 'agent') {
       if (t.acts && t.acts.length) html += actsHtml(t.acts);
       if (t.hold) { html += typing; typed = true; break; }
-      html += `<div class="msg a">${by('Asha', 'AI agent', t.at)}${esc(t.text)}</div>`;
+      const reg = LG.LOCAL[t.lang];   // regional-language line: show what it means in English under it
+      html += `<div class="msg a"${reg ? ` lang="${t.lang}"` : ''}>${by('Asha', 'AI agent', t.at)}${esc(t.text)}${reg && t.en ? `<div class="tr" lang="en">${esc(t.en)}</div>` : ''}</div>`;
     } else if (t.who === 'sys') html += `<div class="msg sys">${esc(t.text)}</div>`;
     else html += `<div class="msg r">${by(t.name || 'Retailer', t.confidence !== undefined && t.confidence < 1 ? 'speech confidence ' + t.confidence : '', t.at)}${esc(t.text)}</div>`;
   }
@@ -386,20 +390,25 @@ function refresh() { renderWho(); renderLog(); renderPad(); renderTools(); rende
 
 /* ---------------- speech ---------------- */
 // speak a reply; `then` runs once she has finished (used for hands-free listening and for hanging up after goodbye)
-function speak(text, lang, then) {
+const EDGE_HAS = ['ta', 'te', 'kn', 'ml', 'bn', 'mr', 'gu'];   // regional languages with a Microsoft Edge voice
+// en: the English meaning of a regional-language line, read out when the browser has no voice for that language
+function speak(text, lang, then, en) {
   const tok = ++speakTok;
   const fin = () => { if (tok !== speakTok) return; agentSpeaking = false; updateStatus(); if (then) then(); };
   if (!$('#voice').checked || !text) { agentSpeaking = false; setTimeout(fin, 0); return; }
   agentSpeaking = true; updateStatus();
-  if (tts) { Promise.resolve(tts.speak(text, { language: lang === 'en' ? 'en' : undefined })).then(fin, fin); return; }
+  if (tts) { Promise.resolve(tts.speak(text, { language: lang === 'hi' ? undefined : lang })).then(fin, fin); return; }
   try {
     if (!window.VoiceHi) { setTimeout(fin, 0); return; }
     VoiceHi.say(text, lang, fin, (used, info) => {
       const vn = $('#voiceName'); if (!vn) return;
-      vn.classList.toggle('warnv', !!(info && info.limited));
-      vn.textContent = info && info.limited ? `(${used || 'default voice'}: Claude's browser can only use your computer's default voice. For Asha's female Hindi voice, open this link in Chrome or Edge.)`
-        : used ? '(' + used + ')' : lang !== 'en' ? '(no Hindi voice in this browser; use Chrome or Edge)' : '(no voice found in this browser)';
-    });
+      const L = langName(lang), fb = info && info.fallback, edge = EDGE_HAS.includes(lang);
+      vn.classList.toggle('warnv', !!(info && (info.limited || fb)));
+      vn.textContent = info && info.limited ? `(${used || 'default voice'}: Claude's browser can only use your computer's default voice${LG.LOCAL[lang] ? ', so Asha reads the English line' : ''}.${!LG.LOCAL[lang] ? ' For Asha\'s female Hindi voice, open this link in Chrome or Edge.' : edge ? ` For Asha's ${L} voice, open this link in Microsoft Edge.` : ''})`
+        : fb === 'en' ? `(${used || 'default voice'}: this browser has no ${L} voice, so Asha reads the English line.${edge ? ` Microsoft Edge has a ${L} voice.` : ''})`
+        : fb === 'hi' ? `(${used}: Hindi voice reading the ${L} line. Microsoft Edge has a ${L} voice.)`
+        : used ? '(' + used + ')' : lang === 'hi' ? '(no Hindi voice in this browser; use Chrome or Edge)' : '(no voice found in this browser)';
+    }, en);
   } catch (e) { fin(); }
 }
 function hushAgent() { speakTok++; agentSpeaking = false; try { tts && tts.stop(); } catch (e) { } try { window.VoiceHi ? VoiceHi.stop() : speechSynthesis.cancel(); } catch (e) { } }
@@ -412,7 +421,9 @@ function startListening() {
   if (dict) { dict.start().catch(err => { handsFree = false; conv.transcript.push({ who: 'sys', text: err && err.code === 'not_granted' ? 'Microphone not allowed; type instead.' : 'Could not start the microphone.' }); renderLog(); renderWho(); }); return; }
   if (!SR) return;
   const r = new SR(); rec = r;
-  r.lang = conv.S.lang === 'en' ? 'en-IN' : 'hi-IN'; r.interimResults = true; r.maxAlternatives = 1;
+  // Hindi calls (and Marathi / Gujarati, where trade talk mixes in Hindi) listen in hi-IN; the other regions in en-IN, which catches
+  // product names and numbers best. The regional yes / no words still come through and are understood.
+  r.lang = ['hi', 'mr', 'gu'].includes(conv.S.lang) ? 'hi-IN' : 'en-IN'; r.interimResults = true; r.maxAlternatives = 1;
   let heard = false;
   r.onstart = () => { listening = true; $('#mic').setAttribute('aria-pressed', 'true'); updateStatus(); };
   r.onend = () => { if (rec === r) rec = null; listening = false; $('#mic').setAttribute('aria-pressed', String(handsFree)); updateStatus(); };
@@ -471,7 +482,7 @@ function claudeTools() {
 function brief() {
   const p = current(), r = p.retailer, sur = r.Owner_Name.split(' ').slice(-1)[0];
   return `You are Asha, Marico's AI sales assistant, on an outbound phone call to a General Trade retailer in India. Sound like a polite, quick field sales rep, never like an IVR. Say early that you are an AI assistant.
-CALL: ${r.Retailer_Name}, owner ${r.Owner_Name} (address as "${sur} ji"), ${r.City}, ${r.State}. Preferred language: ${p.language}. Distributor ${r.Distributor_ID}. Date ${idx.callDate}. Calling window ${p.window}.
+CALL: ${r.Retailer_Name}, owner ${r.Owner_Name} (address as "${conv ? conv.hon : sur + ' ji'}"), ${r.City}, ${r.State}. Preferred language: ${p.language}. Distributor ${r.Distributor_ID}. Date ${idx.callDate}. Calling window ${p.window}.
 RULES, all mandatory:
 1 Identity first. Before any account detail, confirm you are speaking with ${r.Owner_Name} of ${r.Retailer_Name}. Wrong person or wrong number: apologise, disclose nothing, end_call WRONG_PARTY.
 2 Once confirmed: verify_identity, then get_retailer_context. Open with the last order of its top one or two lines and ask how much to send.
@@ -488,7 +499,7 @@ RULES, all mandatory:
 11 Complaint about a past order: apologise, get the product and what went wrong, log_complaint. Then you may ask once about today's order.
 12 Human requested: request_human at once. Busy: schedule_callback at their time and end. "Don't call again": set_do_not_call, apologise, end. Not interested: thank and end. Stocked up or competitor news: log_market_insight, thank, end.
 13 If a retailer line is marked [unclear audio] or makes no sense, ask them to repeat. Never guess an item or a number.
-14 Speak ${p.language === 'Hindi' ? 'Hindi as romanised Hinglish' : p.language + ' (you may mix English trade words as retailers do)'}. If the retailer switches language, switch at once and keep everything agreed.
+14 Speak ${p.language === 'Hindi' ? 'Hindi as romanised Hinglish' : p.language + ' in its own script (keep product names, pack sizes and numbers as retailers say them, e.g. "Parachute 500 ml, 15 pieces")'}. If the retailer switches language, switch at once and keep everything agreed.
 14b If asked whether you are a robot or AI, say yes and offer a human callback. If he asks you to repeat, repeat your last line.
 15 One to three short spoken sentences per turn. Plain text only: no markdown, lists, emojis or stage directions. Finish every call with end_call.
 Reply with only the words Asha says next.`;
@@ -505,13 +516,23 @@ async function claudeTurn(userText) {
     claudeMsgs.push({ role: 'assistant', content: text });
     conv.transcript.push({ who: 'agent', text, tools: conv.turnTools.join(', '), acts: conv.S.toolLog.slice(mark).filter(t => t.name !== 'end_call'), at: elapsed() });
     thinking = false; refresh();
-    afterReply(text, /[a-z]/i.test(text) && !/\b(hai|ji|kya|aap|main|nahi|haan)\b/i.test(text) ? 'en' : 'hi');
+    afterReply(text, replyLang(text));
   } catch (e) {
     if (tok !== callToken) return;
     conv.transcript.push({ who: 'sys', text: e && e.code === 'not_granted' ? 'Claude was not allowed on this page. Switched to Offline rules.' : 'Claude did not answer (' + (e && (e.code || e.message) || 'error') + '). Try again, or switch to Offline rules.' });
     if (e && e.code === 'not_granted') setMode('rules', true);
   } finally { thinking = false; }
   refresh();
+}
+
+// which language an LLM reply is in (for the voice): a regional script, else Hinglish or English
+function replyLang(text) {
+  const home = conv ? conv.home : 'hi';
+  if (/[\u0980-\u09FF]/.test(text)) return home === 'as' ? 'as' : 'bn';   // Bengali and Assamese share a script
+  if (/[\u0900-\u097F]/.test(text)) return home === 'mr' ? 'mr' : 'hi';
+  const s = Object.keys(LG.SCRIPT || {}).find(c => c !== 'bn' && c !== 'as' && c !== 'mr' && LG.SCRIPT[c].test(text));
+  if (s) return s;
+  return /[a-z]/i.test(text) && !/\b(hai|ji|kya|aap|main|nahi|haan)\b/i.test(text) ? 'en' : 'hi';
 }
 
 /* ---------------- call flow ---------------- */
@@ -530,16 +551,16 @@ async function startCall() {
   if (mode === 'claude' && sample) { refresh(); await claudeTurn(brief() + '\n\nThe call has just connected. Say your opening line.'); return; }
   const out = conv.start();
   conv.transcript[conv.transcript.length - 1].at = 0;
-  refresh(); afterReply(out.text, out.lang);
+  refresh(); afterReply(out.text, out.lang, out.en);
 }
 // after Asha's line: if the call is over, hang up once she has said goodbye; in hands-free mode, listen again
-function afterReply(text, lang) {
+function afterReply(text, lang, en) {
   const tok = callToken;
   speak(text, lang, () => {
     if (tok !== callToken || !conv) return;
     if (conv.S.closed) { endCall(); return; }
     if (handsFree) startListening();
-  });
+  }, en);
 }
 function endCall() {
   if (callState === 'ended') return;
@@ -581,7 +602,7 @@ async function retailerSays(text, confidence) {
     fresh.forEach(t => { if (t.hold) { delete t.hold; t.at = elapsed(); } });
     thinking = false;
     refresh();
-    afterReply(out.text, out.lang);
+    afterReply(out.text, out.lang, out.en);
   } finally {
     busy = false;
     if (tok === callToken) { thinking = false; renderWho(); }
@@ -592,7 +613,8 @@ async function retailerSays(text, confidence) {
 /* ---------------- test replies ---------------- */
 function chipList() {
   if (!conv || callState !== 'live' || conv.S.closed) return null;
-  const en = conv.S.lang === 'en', P = conv.pending && conv.pending.type;
+  // test replies in Hinglish for Hindi calls (and Marathi / Gujarati shops, where trade talk mixes in Hindi), in English for the other regions
+  const cl = ['hi', 'mr', 'gu'].includes(conv.S.lang) ? 'hi' : 'en', en = cl === 'en', P = conv.pending && conv.pending.type;
   let k = conv.stage === 'identity' ? 'identity' : conv.stage === 'readback' ? 'readback' : P && CH[P] ? P : conv.S.cart.length ? 'cart' : 'empty';
   if (k === 'size') {
     const opts = conv.pending.options.map(s => idx.products[s].Short.replace(/^(Parachute|Saffola|Nihar|Livon|Set Wet) /, ''));
@@ -600,11 +622,16 @@ function chipList() {
   }
   const last = conv.S.cart[conv.S.cart.length - 1], q = last ? last.qty : 10, q2 = q + 5;
   const sur = current().retailer.Owner_Name.split(' ').slice(-1)[0];
-  const list = CH[k][en ? 'en' : 'hi'].filter(c => (last || !/\{q/.test(c)) && !(conv.complained && /galat aaya|came wrong/.test(c))).map(c => c.replace(/\{sur\}/g, sur).replace(/\{q2\}/g, q2).replace(/\{q\}/g, q));
+  const h = P === 'bigConfirm' && (idx.history[conv.S.rid] || []).find(x => x.SKU_ID === conv.pending.sku), u = h ? Math.max(h.Last_Order_Qty, h.Previous_Order_Qty) : 10;   // the usual quantity
+  const list = CH[k][cl].filter(c => (last || !/\{q/.test(c)) && !(conv.complained && /galat aaya|came wrong/.test(c))).map(c => c.replace(/\{sur\}/g, sur).replace(/\{q2\}/g, q2).replace(/\{q\}/g, q).replace(/\{u\}/g, u));
   const L = current().language, nat = NATIVE[L];
   if (nat) {   // the retailer's own words for yes / no / that's all, where they fit
     const pick = { identity: [0, 'yes'], readback: [0, 'yes'], finalQ: [0, 'yes'], suggest: [1, 'no'], cart: [2, "that's all"] }[k];
     if (pick) list.unshift([nat[pick[0]], `${nat[pick[0]]} (${L}: ${pick[1]})`]);
+  }
+  if (LG.LOCAL[conv.home] && ['identity', 'empty', 'cart'].includes(k)) {   // ask for another language, or back to the shop's own
+    const ask = conv.S.lang === conv.home ? 'Can we speak in English?' : `Please speak in ${L}`;
+    if (!list.includes(ask)) list.push(ask);
   }
   return list;
 }
@@ -663,7 +690,7 @@ $('#mic').onclick = () => {
   startListening();
 };
 
-fetch('marico_data.json?v=20261127-1').then(r => r.json()).then(d => {
+fetch('marico_data.json?v=20261127-2').then(r => r.json()).then(d => {
   DATA = d; idx = AgentCore.buildIndex(DATA); plan = AgentCore.dailyCallPlan(idx);
   selectRetailer(sel);
 }).catch(() => { $('#log').innerHTML = '<div class="empty"><h3>Data did not load.</h3><p>Reload the page.</p></div>'; });

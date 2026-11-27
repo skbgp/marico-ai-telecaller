@@ -11,15 +11,21 @@
  *                   Every commercial action goes through these, in both
  *                   modes, so an LLM can never book stock that is not
  *                   there, invent a discount or skip the read-back.
- *   3. DIALOGUE   - deterministic Hinglish/English dialogue manager
- *                   (offline fallback + test harness).  In "Claude mode"
+ *   3. DIALOGUE   - deterministic dialogue manager that speaks the
+ *                   retailer's language (Hindi, English and the nine
+ *                   regional languages in languages.js; offline fallback
+ *                   + test harness).  In "Claude mode"
  *                   the LLM replaces this layer and calls the same TOOLS.
  * ===================================================================== */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else root.AgentCore = factory();
-})(typeof self !== 'undefined' ? self : this, function () {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./languages.js'));
+  else root.AgentCore = factory(root.AgentLanguages);
+})(typeof self !== 'undefined' ? self : this, function (LG) {
   'use strict';
+  // Asha's lines in the nine regional languages (languages.js). Without that file the agent still works, in Hindi and English.
+  LG = LG || {};
+  const LOCAL = LG.LOCAL || {};
+  const isLocal = l => !!(LOCAL[l] && LG.TX_LOCAL && LG.TX_LOCAL[l]);
 
   const DAY = 86400000;
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -336,17 +342,36 @@
   function normalize(text) {
     let t = ' ' + String(text || '') + ' ';
     DEVA.forEach(([d, r]) => { t = t.split(d).join(' ' + r + ' '); });
-    t = t.replace(/[०-९]/g, c => String(c.charCodeAt(0) - 0x0966));
+    // digits in any Indian script (Devanagari, Bengali/Assamese, Gurmukhi, Gujarati, Odia, Tamil, Telugu, Kannada, Malayalam) -> 0-9
+    t = t.replace(/[\u0966-\u096F\u09E6-\u09EF\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0BE6-\u0BEF\u0C66-\u0C6F\u0CE6-\u0CEF\u0D66-\u0D6F]/g, c => String((c.charCodeAt(0) - 0x66) & 0xF));
     t = t.toLowerCase().replace(/₹/g, ' rs ');
     t = t.replace(/set[\s-]*wet/g, 'setwet').replace(/aadha\s+(litre|liter|l)\b/g, '500 ml').replace(/half\s+(a\s+)?(litre|liter)/g, '500 ml');
     t = t.replace(/half\s+dozen|aadha\s+darjan|adha\s+darjan/g, '6 piece');
     t = t.replace(/(\d)([a-z])/g, '$1 $2').replace(/([a-z])(\d)/g, '$1 $2');
     t = t.replace(/(\d),(\d{3})/g, '$1$2');
-    t = t.replace(/[,;]/g, ' , ').replace(/[!?:()"“”‘’]/g, ' ').replace(/(?<!\d)\.|\.(?!\d)/g, ' ');
+    t = t.replace(/[,;]/g, ' , ').replace(/[!?:()"“”‘’।॥]/g, ' ').replace(/(?<!\d)\.|\.(?!\d)/g, ' ');
     t = t.replace(/(\d+)\s*-\s*(\d+)/g, '$1 $2');
     return t.replace(/\s+/g, ' ').trim();
   }
   const has = (norm, list) => list.some(k => (' ' + norm + ' ').includes(' ' + k + ' ') || (k.includes(' ') && norm.includes(k)));
+
+  // "Tamil mein baat karo", "speak in English", "Hindi please", "தமிழ்ல பேசுங்க": which language the retailer asks for.
+  // A negated mention ("Hindi nahi aati", "I don't know Hindi") is returned as { not: code } instead.
+  const LANG_NAME = [['english', 'en'], ['angrezi', 'en'], ['angreji', 'en'], ['hindi', 'hi'], ['हिंदी', 'hi'], ['हिन्दी', 'hi'],
+    ['tamil', 'ta'], ['தமிழ்', 'ta'], ['telugu', 'te'], ['తెలుగు', 'te'], ['kannada', 'kn'], ['ಕನ್ನಡ', 'kn'], ['malayalam', 'ml'], ['മലയാളം', 'ml'],
+    ['bengali', 'bn'], ['bangla', 'bn'], ['বাংলা', 'bn'], ['marathi', 'mr'], ['मराठी', 'mr'], ['gujarati', 'gu'], ['ગુજરાતી', 'gu'],
+    ['odia', 'or'], ['oriya', 'or'], ['ଓଡ଼ିଆ', 'or'], ['assamese', 'as'], ['asomiya', 'as'], ['অসমীয়া', 'as']];
+  const NEG_W = new Set(['nahi', 'nahin', 'not', 'dont', "don't", 'cant', "can't", 'cannot', 'no', 'illai', 'theriyadhu', 'teliyadu', 'gottilla', 'ariyilla', 'jani na', 'nako', 'nathi', 'janina', 'janena']);
+  function langAsk(norm) {
+    const toks = norm.split(' ');
+    let code = null, at = -1;
+    toks.forEach((w, i) => { const hit = LANG_NAME.find(([n]) => w === n || (w.startsWith(n) && w.length <= n.length + 3)); if (hit) { code = hit[1]; at = i; } });
+    if (!code) return null;
+    const near = toks.slice(Math.max(0, at - 3), at).concat(toks.slice(at + 1, at + 3));
+    if (near.some(w => NEG_W.has(w))) return { not: code };
+    const cue = toks.length <= 3 || /\b(mein|me|main|mai|in|speak|speaking|talk|baat|bol\w*|please|pls|language|bhasha|bhaasha)\b/.test(norm);
+    return cue ? code : null;
+  }
 
   function langScore(tokens) {
     let en = 0, hi = 0;
@@ -379,6 +404,10 @@
     if (I.busy && /\b(bhej\w*|send|deliver\w*|baaki|rest|follow)\b/.test(norm) && !/\b(call|phone)\b/.test(norm)) I.busy = false;
     const toks = norm.split(' ');
     I.lang = langScore(toks);
+    const ask = langAsk(norm);
+    I.toLang = typeof ask === 'string' ? ask : I.toEnglish ? 'en' : I.toHindi ? 'hi' : null;
+    I.notLang = ask && ask.not || null;
+    I.toEnglish = I.toLang === 'en'; I.toHindi = I.toLang === 'hi';
     return I;
   }
 
@@ -695,15 +724,56 @@
     shortAgain: { hi: c => `Maaf kijiye, ${c.item} ke abhi ${c.avail} pieces bhej doon, aur baaki ${c.rest} baad mein?`, en: c => `Sorry, shall I send ${c.avail} pieces of ${c.item} now, and the other ${c.rest} later?` }
   };
   // "Maaf kijiye, " + "Kya ..." -> "Maaf kijiye, kya ..."
-  function lowerAfterComma(pre, q) { pre = pre || ''; return /, $/.test(pre) ? pre + q.charAt(0).toLowerCase() + q.slice(1) : pre + q; }
-
-  function joinList(items, lang) {
-    if (items.length <= 1) return items.join('');
-    return items.slice(0, -1).join(', ') + (lang === 'hi' ? ' aur ' : ' and ') + items[items.length - 1];
+  // (brand names, "I", acronyms and other scripts keep their first letter)
+  function lowerAfterComma(pre, q) {
+    pre = pre || '';
+    if (!/, $/.test(pre) || !/^[A-Z][a-z]/.test(q) || /^(Parachute|Saffola|Nihar|Livon|Set Wet|Marico|Asha|I\b|I')/.test(q)) return pre + q;
+    return pre + q.charAt(0).toLowerCase() + q.slice(1);
   }
-  const qtyPhrase = (name, q, lang) => { const u = q === 1 ? 'piece' : 'pieces'; return lang === 'hi' ? `${name} ke ${q} ${u}` : `${q} ${u} of ${name}`; };
+
+  // Merge the regional-language lines into TX (each key then has hi, en, ta, te, kn, ml, bn, mr, gu, or, as)
+  Object.keys(LG.TX_LOCAL || {}).forEach(l => Object.keys(TX).forEach(k => { if (LG.TX_LOCAL[l][k]) TX[k][l] = LG.TX_LOCAL[l][k]; }));
+
+  // Short phrases the dialogue code builds around items; regional versions come from languages.js
+  const PH = {
+    whoPre: { hi: () => 'Main Asha hoon, Marico ki AI sales assistant. Aapke order ke liye call kiya hai. ', en: () => "I'm Asha, Marico's AI sales assistant, calling about your order. " },
+    sorryPre: { hi: () => 'Maaf kijiye, ', en: () => 'Sorry, ' },
+    surePre: { hi: () => 'Ji zaroor. ', en: () => 'Sure. ' },
+    noted: { hi: x => `${x} note kar liya. `, en: x => `Noted ${x}. ` },
+    addedPre: { hi: x => `${x} add kar diya. `, en: x => `Added ${x}. ` },
+    swapped: { hi: x => `Theek hai, ${x}. Aur kuch?`, en: x => `Okay, ${x}. Anything else?` },
+    removedNote: { hi: x => `${x} hata diya`, en: x => `removed ${x}` },
+    nowNote: { hi: (x, q) => `${x} ab ${q} pieces`, en: (x, q) => `${x} now ${q} pieces` },
+    noProblemPre: { hi: () => 'Koi baat nahi. ', en: () => 'No problem. ' },
+    tailAdd: { hi: q => ` ${q} bhej doon?`, en: q => ` Shall I add ${q}?` },
+    tailQty: { hi: () => ' Kitne bhejun?', en: () => ' How many should I send?' },
+    followUp: { hi: n => `Baaki ${n} ka follow-up rakh diya. `, en: n => `Follow-up set for the other ${n}. ` }
+  };
+  Object.keys(PH).forEach(k => Object.assign(PH[k], Object.assign({}, (LG.PH || {})[k], { hi: PH[k].hi, en: PH[k].en })));
+  const WHY_EN = [p => `${p}% of similar stores stock it.`, () => `You don't stock it yet and the trial pack is small.`];
+  const WHY_HI = [p => `Aap jaisi ${p}% dukaanein ise rakhti hain.`, () => `Ye aapke yahan abhi nahi hai aur trial pack chhota hai.`];
+
+  // List and quantity phrases. In a regional language each phrase is also registered (reg) with its English
+  // meaning, so every line Asha says can carry an English version for people who don't read that script.
+  function joinList(items, lang, conn, reg) {
+    if (items.length <= 1) return items.join('');
+    const head = items.slice(0, -1).join(', '), tail = items[items.length - 1];
+    const word = l => conn === 'or' ? (l === 'hi' ? ' ya ' : (LG.OR || {})[l] || ' or ') : (l === 'hi' ? ' aur ' : (LG.AND || {})[l] || ' and ');
+    const out = head + word(isLocal(lang) ? lang : lang === 'hi' ? 'hi' : 'en') + tail;
+    if (reg && isLocal(lang)) reg(out, head + word('en') + tail);
+    return out;
+  }
+  function qtyPhrase(name, q, lang, reg) {
+    const u = q === 1 ? 'piece' : 'pieces';
+    if (lang === 'hi') return `${name} ke ${q} ${u}`;
+    const en = `${q} ${u} of ${name}`;
+    if (!isLocal(lang)) return en;
+    const out = `${name} ${q} ${u}`;   // "Parachute 500 ml 15 pieces": how retailers say it in every region
+    if (reg) reg(out, en);
+    return out;
+  }
   // "Parachute 500 ml ke 12 aur 200 ml ke 8 pieces" - drop the repeated brand on consecutive lines
-  function linesPhrase(list, lang) {
+  function linesPhrase(list, lang, reg) {
     // only when both lines are the plain product: "Parachute Advansed Jasmine 200 ml ..., 200 ml ..." would sound like more Jasmine
     let prevBrand = null, prevPlain = false;
     const VARIANT = /Advansed|Gold|Active|Oats|Shanti|Coconut|Serum|Gel|Deo|Styler/;
@@ -712,35 +782,72 @@
       const plain = !!brand && !VARIANT.test(x.name);
       const nm = plain && brand === prevBrand && prevPlain ? x.name.replace(brand + ' ', '') : x.name;
       prevBrand = brand; prevPlain = plain;
-      return qtyPhrase(nm, x.qty, lang);
+      return qtyPhrase(nm, x.qty, lang, reg);
     });
-    return joinList(parts, lang);
+    return joinList(parts, lang, 'and', reg);
+  }
+  // English version of a regional line: put back the English of every registered phrase, longest first
+  // (a phrase's English can hold shorter registered phrases, which are then replaced in the same pass).
+  function glossOf(text, map) {
+    let g = text;
+    [...map.keys()].sort((a, b) => b.length - a.length).forEach(k => { if (g.includes(k)) g = g.split(k).join(map.get(k)); });
+    return g.replace(/\s*\([^)]*[^\x00-\x7F][^)]*\)/g, '').replace(/\s{2,}/g, ' ').trim();   // "Vanakkam (வணக்கம்)" -> "Vanakkam"
   }
 
   class Conversation {
     constructor(idx, rid, opts) {
       this.S = createSession(idx, rid, opts);
       this.idx = idx;
-      const lang = this.S.plan.language;
-      this.S.lang = lang === 'Hindi' ? 'hi' : (opts && opts.lang) || (lang === 'Hindi' ? 'hi' : 'en');
-      if (['Marathi', 'Gujarati'].includes(lang) && !(opts && opts.lang)) this.S.lang = 'hi'; // Hindi widely understood; full regional language in Claude mode
+      const language = this.S.plan.language, code = (LG.CODE || {})[language];
+      // the retailer's own language: Hindi, one of the nine regional languages, else English
+      this.home = language === 'Hindi' ? 'hi' : isLocal(code) ? code : 'en';
+      this.S.lang = (opts && opts.lang) || this.home;
       this.stage = 'identity';
       this.pending = null; this.ctxBrand = null; this.lastSku = null; this.suggested = false; this.misses = 0; this.asrMisses = 0;
       this.transcript = [];
-      const surname = this.S.r.Owner_Name.split(' ').slice(-1)[0];
-      this.hon = surname + ' ji';
+      const owner = this.S.r.Owner_Name, surname = owner.split(' ').slice(-1)[0];
+      this.hon = LG.honFor ? LG.honFor(this.home, owner) : surname + ' ji';   // Sharma ji, Murugan sir, Lakshmi garu, Patil saheb ...
+      this.gl = new Map();
+      this.reg = (local, en) => { if (local && en && local !== en) this.gl.set(local, en); };
     }
-    t(key, c) { return TX[key][this.S.lang](Object.assign({ hon: this.hon }, c || {})); }
-    say(text) { this.transcript.push({ who: 'agent', text, lang: this.S.lang }); const tools = this.S.toolLog.slice(this.mark || 0); this.mark = this.S.toolLog.length; return { text, lang: this.S.lang, stage: this.stage, closed: this.S.closed, record: this.S.record(), cart: this.S.cart.map(l => Object.assign({}, l)), tools }; }
+    t(key, c) {
+      const L = this.S.lang, a = Object.assign({ hon: this.hon }, c || {});
+      const out = (TX[key][L] || TX[key].en)(a);
+      if (isLocal(L)) this.reg(out, TX[key].en(a));
+      return out;
+    }
+    ph(key, ...args) {
+      const L = this.S.lang, P = PH[key], out = (P[L] || P.en)(...args);
+      if (isLocal(L)) this.reg(out, P.en(...args));
+      return out;
+    }
+    join(items, conn) { return joinList(items, this.S.lang, conn, this.reg); }
+    qty(name, q) { return qtyPhrase(name, q, this.S.lang, this.reg); }
+    lines(list) { return linesPhrase(list, this.S.lang, this.reg); }
+    // same: { lang, en } when an earlier line is said again word for word
+    say(text, same) {
+      const one = x => x && x.replace(/(^|[^\d.,])1 pieces\b/g, '$11 piece');   // "now 1 pieces" -> "now 1 piece"
+      const L = same ? same.lang : this.S.lang;
+      const en = isLocal(L) ? one(same ? same.en : glossOf(text, this.gl)) : undefined;   // English first: it matches the phrases as built
+      text = one(text);
+      const line = { who: 'agent', text, lang: L }; if (en) line.en = en;
+      this.transcript.push(line);
+      const tools = this.S.toolLog.slice(this.mark || 0); this.mark = this.S.toolLog.length;
+      const out = { text, lang: L, stage: this.stage, closed: this.S.closed, record: this.S.record(), cart: this.S.cart.map(l => Object.assign({}, l)), tools };
+      if (en) out.en = en;
+      return out;
+    }
     start() {
+      this.gl = new Map();
       const p = this.S.plan;
-      const brands = joinList(p.brandsRanked.slice(0, 2), this.S.lang);
+      const brands = this.join(p.brandsRanked.slice(0, 2));
       return this.say(this.t('open', { language: p.language, shop: p.retailer.Retailer_Name, owner: p.retailer.Owner_Name, brands }));
     }
-    close(key, c, outcome) { const out = this.say(this.t(key, c)); this.S.T.end_call({ outcome }); this.stage = 'closed'; out.closed = true; out.record = this.S.record(); return out; }
+    close(key, c, outcome) { this.queue = []; const out = this.say(this.t(key, c)); this.S.T.end_call({ outcome }); this.stage = 'closed'; out.closed = true; out.record = this.S.record(); return out; }
 
     hear(text, meta) {
       meta = meta || {};
+      this.gl = new Map();
       this.transcript.push({ who: 'retailer', text, confidence: meta.confidence });
       if (this.S.closed) return this.say(this.t('closed'));
       const conf = meta.confidence === undefined ? 1 : meta.confidence;
@@ -754,8 +861,14 @@
       const I = intents(norm);
       // language adaptation (keeps all context; only the reply language changes)
       const nTok = norm.split(' ').filter(w => /[a-z]/.test(w)).length;
-      if (I.toEnglish || (this.S.lang === 'hi' && ((I.lang.en >= 3 && I.lang.en > 2 * I.lang.hi) || (I.lang.en >= 2 && I.lang.hi === 0 && nTok >= 3)))) this.S.lang = 'en';
-      else if (I.toHindi || (this.S.lang === 'en' && ((I.lang.hi >= 3 && I.lang.hi > 2 * I.lang.en) || (I.lang.hi >= 2 && I.lang.en === 0 && nTok >= 3)))) this.S.lang = 'hi';
+      // asked by name ("Tamil please", "can we speak in English?"): switch to it, if Asha speaks it
+      if (I.toLang && (I.toLang === 'hi' || I.toLang === 'en' || isLocal(I.toLang))) this.S.lang = I.toLang;
+      // "Hindi nahi aati": leave that language, for the retailer's own one (or English / Hindi)
+      else if (I.notLang && I.notLang === this.S.lang) this.S.lang = this.home !== this.S.lang ? this.home : this.S.lang === 'en' ? 'hi' : 'en';
+      // Hindi and English follow the retailer's words. A regional-language call stays in that language (retailers mix
+      // English and Hindi trade words in every region); it changes only when the retailer asks for another language.
+      else if (this.S.lang === 'hi' && ((I.lang.en >= 3 && I.lang.en > 2 * I.lang.hi) || (I.lang.en >= 2 && I.lang.hi === 0 && nTok >= 3))) this.S.lang = 'en';
+      else if (this.S.lang === 'en' && ((I.lang.hi >= 3 && I.lang.hi > 2 * I.lang.en) || (I.lang.hi >= 2 && I.lang.en === 0 && nTok >= 3))) this.S.lang = 'hi';
 
       // ---- global intents, any stage ----
       if (I.dnc) { this.S.T.set_do_not_call({ said: text }); return this.close('dnc', {}, 'DNC_SET'); }
@@ -767,7 +880,8 @@
       }
       const firstTok = norm.split(' ')[0];
       const startsNo = ['nahi', 'nahin', 'no', 'na', 'nope'].includes(firstTok);
-      if (this.stage === 'identity' && (I.wrongParty || (startsNo && !I.busy) || (I.deny && !I.affirm && !I.busy) || / ji nahi hoon| nahi hoon\b/.test(' ' + norm))) {
+      // ("No, English please" / "Hindi nahi aati" is about the language, not a wrong number)
+      if (this.stage === 'identity' && !I.toLang && !I.notLang && (I.wrongParty || (startsNo && !I.busy) || (I.deny && !I.affirm && !I.busy) || / ji nahi hoon| nahi hoon\b/.test(' ' + norm))) {
         this.S.events.push({ type: 'WRONG_PARTY', note: 'No account data disclosed' });
         return this.close('wrongParty', {}, 'WRONG_PARTY');
       }
@@ -789,11 +903,10 @@
           if (segs.length && hasQty) return this.handleItems(norm, I, text);
           return this.leadLines();
         }
-        const hiL = this.S.lang === 'hi';
-        const pre = I.whoAreYou ? (hiL ? 'Main Asha hoon, Marico ki AI sales assistant. Aapke order ke liye call kiya hai. ' : "I'm Asha, Marico's AI sales assistant, calling about your order. ")
-          : I.toEnglish ? 'Sure. ' : I.toHindi ? 'Ji zaroor. ' : I.repeatLine ? '' : (hiL ? 'Maaf kijiye, ' : 'Sorry, ');
+        const pre = I.whoAreYou ? this.ph('whoPre') : I.toLang || I.notLang ? this.ph('surePre') : I.repeatLine ? '' : this.ph('sorryPre');
         return this.say(this.t('idAgain', { pre, shop: this.S.r.Retailer_Name, owner: this.S.r.Owner_Name }));
       }
+      if ((I.toLang || I.notLang) && this.langOnly(norm, I)) return this.reAsk(this.ph('surePre'));
       if (this.pending && this.pending.type === 'complaint') return this.finishComplaint(text, norm);
       if (I.complaint && !this.complained) return this.startComplaint(text, norm);
       if (I.complaint && this.complained && !this.segsHaveItems(norm)) { const ev = this.S.events.filter(e => e.type === 'COMPLAINT').slice(-1)[0]; return this.say(this.t('complaintAgain', { ticket: ev ? ev.ticket : '' })); }
@@ -803,10 +916,11 @@
         this.S.T.log_discount_request({ said: text, sku_id: sku || null, granted: false });
         return this.say(this.t('discount', p ? { item: p.Short, price: inr(p.Distributor_Billing_Price_INR) } : {}));
       }
-      if (I.repeatLine && !this.segsHaveItems(norm)) { const last = this.transcript.filter(t => t.who === 'agent').slice(-1)[0]; return this.say(last ? last.text : this.t('anythingElse')); }
+      if (I.repeatLine && !this.segsHaveItems(norm)) { const last = this.transcript.filter(t => t.who === 'agent').slice(-1)[0]; if (last && last.lang !== this.S.lang && (I.toLang || I.notLang)) return this.reAsk(this.ph('surePre'));   // "say that again in English"
+        return last ? this.say(last.text, last) : this.say(this.t('anythingElse')); }
       if (I.whoAreYou && !this.segsHaveItems(norm)) return this.say(this.t('whoAreYou'));
       if (I.cancelOrder && !this.S.order) {
-        this.S.cart.slice().forEach(l => this.S.T.remove_item({ sku_id: l.sku }));
+        this.S.cart.slice().forEach(l => this.S.T.remove_item({ sku_id: l.sku })); this.queue = [];
         this.S.events.push({ type: 'NO_ORDER', reason: 'Retailer cancelled before confirmation' });
         return this.close('cancelled', {}, 'NO_ORDER');
       }
@@ -849,12 +963,17 @@
       if (I.totalQ && !this.segsHaveItems(norm)) {
         if (!this.S.cart.length) return this.say(this.t('emptyTotal'));
         const sum = this.S.T.get_order_summary();
-        return this.say(this.t('runningTotal', { lines: linesPhrase(sum.lines.map(l => ({ name: l.product, qty: l.quantity })), this.S.lang), total: inr(sum.order_value_inr) }));
+        return this.say(this.t('runningTotal', { lines: this.lines(sum.lines.map(l => ({ name: l.product, qty: l.quantity }))), total: inr(sum.order_value_inr) }));
       }
       if (I.price || I.sizes) { const r = this.answerInfo(norm, I); if (r) return r; }
 
       // ---- pending clarifications ----
-      if (this.pending) { const r = this.resolvePending(norm, I, text, conf); if (r) return r; }
+      if (this.pending) {
+        const r = this.resolvePending(norm, I, text, conf); if (r) return r;
+        // "10" or "one jar" that does not answer "which size?": ask again instead of changing some other line
+        const sg = segments(norm);
+        if (this.pending && ['size', 'litreChoice'].includes(this.pending.type) && !sg.some(x => x.brand || x.variants.length) && sg.some(x => x.nums.length || x.sizeWord || x.size)) return this.reAsk(this.ph('sorryPre'));
+      }
 
       // ---- readback stage ----
       if (this.stage === 'readback') {
@@ -903,28 +1022,32 @@
       const d = new Date(Date.parse(this.idx.callDate) + (t.tomorrow ? DAY : 0));
       const hh = t.hour === null ? parseInt(ws, 10) : t.hour;
       const iso = d.toISOString().slice(0, 10) + 'T' + String(hh).padStart(2, '0') + ':00';
-      const h12 = hh > 12 ? hh - 12 : hh;
-      const say = this.S.lang === 'hi' ? `${t.tomorrow ? 'kal ' : 'aaj '}${hh >= 16 ? 'shaam' : (hh >= 12 ? 'dopahar' : 'subah')} ${h12} baje` : `${t.tomorrow ? 'tomorrow' : 'today'} at ${h12} ${hh >= 12 ? 'PM' : 'AM'}`;
+      const h12 = hh > 12 ? hh - 12 : hh, L = this.S.lang;
+      const en = `${t.tomorrow ? 'tomorrow' : 'today'} at ${h12} ${hh >= 12 ? 'PM' : 'AM'}`;
+      const say = L === 'hi' ? `${t.tomorrow ? 'kal ' : 'aaj '}${hh >= 16 ? 'shaam' : (hh >= 12 ? 'dopahar' : 'subah')} ${h12} baje`
+        : isLocal(L) && LG.whenSay ? LG.whenSay(L, t.tomorrow, hh) : en;
+      if (isLocal(L)) this.reg(say, en);
       return { iso, say };
     }
 
-    leadLines() {
+    leadLines(prefix) {
+      prefix = prefix || '';
       const p = this.S.plan;
-      if (!p.lead.length) return this.say(this.t('anythingElse'));
+      if (!p.lead.length) return this.say(this.withPre(prefix, this.t('anythingElse')));
       this.ctxBrand = p.lead[0].brand;
-      const lines = linesPhrase(p.lead.map(b => ({ name: b.name, qty: b.lastQty })), this.S.lang);
+      const lines = this.lines(p.lead.map(b => ({ name: b.name, qty: b.lastQty })));
       const key = this.leadDone ? 'leadAgain' : 'lead'; this.leadDone = true;
-      return this.say(this.t(key, { lines, days: p.daysSince }));
+      return this.say(this.withPre(prefix, this.t(key, { lines, days: p.daysSince })));
     }
     leadForBrand(brand) {
       this.ctxBrand = brand;
       const lines = this.S.plan.basket.filter(b => b.brand === brand && !b.lapsed).slice(0, 2);
       if (!lines.length) return this.say(this.t('askSize', { brand, options: this.sizeOptions(brand) }));
-      return this.say(this.t('leadBrand', { brand, lines: linesPhrase(lines.map(b => ({ name: b.name.replace(new RegExp('^' + brand + ' '), '') || b.name, qty: b.lastQty })), this.S.lang) }));
+      return this.say(this.t('leadBrand', { brand, lines: this.lines(lines.map(b => ({ name: b.name.replace(new RegExp('^' + brand + ' '), '') || b.name, qty: b.lastQty }))) }));
     }
     sizeOptions(brand, list) {
       const ps = list || Object.values(this.idx.products).filter(p => p.Brand === brand);
-      return joinList(ps.map(p => p.Short.replace(brand + ' ', '')), this.S.lang === 'hi' ? 'hi' : 'en').replace(' aur ', ' ya ').replace(' and ', ' or ');
+      return this.join(ps.map(p => p.Short.replace(brand + ' ', '')), 'or');
     }
     resolve(seg) {
       const hist = this.idx.history[this.S.rid] || [];
@@ -951,22 +1074,22 @@
       }
       return { cands: c, hist };
     }
-    handleItems(norm, I, text, conf) {
+    // carry: lines already booked this turn (from an answered question); lead: words to put before the reply
+    handleItems(norm, I, text, conf, carry, lead) {
       conf = conf === undefined ? 1 : conf;
       const segs = segments(norm);
-      const notes = [], questions = [];
-      let updates = 0, removed = 0;
+      const notes = (carry || []).slice(), questions = [], later = [];
+      let updates = 0, removed = 0, asked = null;
       let lastBrand = this.ctxBrand;
-      for (const seg of segs) {
-        if (!seg.brand && !seg.variants.length && !seg.size && !seg.nums.length && !seg.litreNums.length && !seg.rejected.length) continue;
-        if (seg.brand) lastBrand = seg.brand; else if (seg.variants.length) lastBrand = VARIANT_BRAND[seg.variants[0]] || lastBrand;
+      // one item of the utterance: returns { note } when booked, { question } when something must be asked first, or {} to skip
+      const one = (seg) => {
         const ctxSave = this.ctxBrand; this.ctxBrand = lastBrand;
         // quantity-only utterance ("15", "10 nahi 15 kar do") -> applies to the last touched line
         if (!seg.brand && !seg.variants.length && !seg.size && !seg.sizeWord && !seg.litreNums.length && seg.nums.length && this.lastSku) {
+          if (asked) return {};   // a bare number after another item's question is ambiguous: not applied anywhere
           const q = seg.nums[seg.nums.length - 1];
           const r = this.applyQty(this.lastSku, q, conf, text);
-          if (r.question) { questions.push(r.question); break; }
-          notes.push(r.note); if (r.updated) updates++; continue;
+          return r.question ? { question: r.question } : { note: r.note, updated: r.updated };
         }
         let { cands } = this.resolve(seg);
         // volume quantities: "Saffola Gold 10 litre"
@@ -978,9 +1101,8 @@
             const divisible = cands.filter(p => p.Pack_Measure_Unit === 'ml' && (L * 1000) % p.Pack_Measure === 0 && p.Pack_Measure < L * 1000);
             if (exact.length && divisible.length) {
               const small = divisible.sort((a, b) => b.Pack_Measure - a.Pack_Measure)[0];
-              this.pending = { type: 'litreChoice', options: [{ sku: exact[0].SKU_ID, qty: 1 }, { sku: small.SKU_ID, qty: L * 1000 / small.Pack_Measure }] };
-              questions.push(this.t('litreAmb', { v: L, a: qtyPhrase(exact[0].Short, 1, this.S.lang), b: qtyPhrase(small.Short, L * 1000 / small.Pack_Measure, this.S.lang) }));
-              break;
+              this.pending = { type: 'litreChoice', litres: L, options: [{ sku: exact[0].SKU_ID, qty: 1 }, { sku: small.SKU_ID, qty: L * 1000 / small.Pack_Measure }] };
+              return { question: this.t('litreAmb', { v: L, a: this.qty(exact[0].Short, 1), b: this.qty(small.Short, L * 1000 / small.Pack_Measure) }) };
             }
             if (exact.length === 1) { cands = exact; }
             else if (divisible.length) {
@@ -990,17 +1112,16 @@
               if (pick) { seg.nums = [{ n: L * 1000 / pick.Pack_Measure, unit: 'piece', fromLitres: L }]; cands = [pick]; }
               else {
                 this.pending = { type: 'size', options: divisible.map(p => p.SKU_ID), litres: L };
-                questions.push(this.t('askSize', { brand: lastBrand || divisible[0].Brand, options: this.sizeOptions(divisible[0].Brand, divisible) }));
-                break;
+                return { question: this.t('askSize', { brand: lastBrand || divisible[0].Brand, options: this.sizeOptions(divisible[0].Brand, divisible) }) };
               }
             }
           }
         }
-        if (!cands.length) { if (seg.brand || seg.variants.length || seg.size) { questions.push(this.t('fallback')); break; } continue; }
+        if (!cands.length) return seg.brand || seg.variants.length || seg.size ? { question: this.t('fallback'), unknown: true } : {};
         const qtyTok = seg.nums.length ? seg.nums[seg.nums.length - 1] : null;
         if (I.remove && !qtyTok) {
           const inCart = cands.filter(p => this.S.cart.some(l => l.sku === p.SKU_ID));
-          if (inCart.length === 1) { this.S.T.remove_item({ sku_id: inCart[0].SKU_ID }); notes.push(this.S.lang === 'hi' ? `${inCart[0].Short} hata diya` : `removed ${inCart[0].Short}`); removed++; continue; }
+          if (inCart.length === 1) { this.S.T.remove_item({ sku_id: inCart[0].SKU_ID }); return { note: this.ph('removedNote', inCart[0].Short), removed: true }; }
         }
         if (cands.length > 1) {
           const bought = new Set((this.idx.history[this.S.rid] || []).map(h => h.SKU_ID));
@@ -1010,9 +1131,8 @@
           else {
             const opts = cands.slice(0, 4);
             this.pending = { type: 'size', options: opts.map(p => p.SKU_ID), qty: qtyTok };
-            if (new Set(opts.map(p => p.Brand)).size > 1) questions.push(this.t('askWhich', { options: joinList(opts.map(p => p.Short), this.S.lang).replace(' aur ', ' ya ').replace(' and ', ' or ') }));
-            else questions.push(this.t('askSize', { brand: opts[0].Brand, options: this.sizeOptions(opts[0].Brand, opts) }));
-            break;
+            return { question: new Set(opts.map(p => p.Brand)).size > 1 ? this.t('askWhich', { options: this.join(opts.map(p => p.Short), 'or') })
+              : this.t('askSize', { brand: opts[0].Brand, options: this.sizeOptions(opts[0].Brand, opts) }) };
           }
         }
         const sku = cands[0].SKU_ID;
@@ -1020,24 +1140,52 @@
         if (!qtyTok) {
           const h = (this.idx.history[this.S.rid] || []).find(x => x.SKU_ID === sku);
           this.pending = { type: 'qty', sku };
-          questions.push(this.t('askQty', { item: cands[0].Short, last: h && h.Last_Order_Qty }));
-          break;
+          return { question: this.t('askQty', { item: cands[0].Short, last: h && h.Last_Order_Qty }) };
         }
         const r = this.applyQty(sku, qtyTok, conf, text);
-        if (r.question) { questions.push(r.question); break; }
-        notes.push(r.note); if (r.updated) updates++;
+        if (r.question) return { question: r.question };
         this.ctxBrand = ctxSave === null ? cands[0].Brand : cands[0].Brand;
+        return { note: r.note, updated: r.updated };
+      };
+      for (const seg of segs) {
+        if (!seg.brand && !seg.variants.length && !seg.size && !seg.nums.length && !seg.litreNums.length && !seg.rejected.length) continue;
+        const ownBrand = seg.brand || (seg.variants.length && VARIANT_BRAND[seg.variants[0]]);
+        if (seg.brand) lastBrand = seg.brand; else if (seg.variants.length) lastBrand = VARIANT_BRAND[seg.variants[0]] || lastBrand;
+        // One question at a time. After the first question, clear items are still booked; an item that needs its own
+        // question waits (asked once the first is answered) instead of being dropped.
+        const keep = asked && { pending: this.pending, lastSku: this.lastSku, ctxBrand: this.ctxBrand };
+        const r = one(seg);
+        if (r.question) {
+          if (!asked) { questions.push(r.question); asked = { lastSku: this.lastSku, ctxBrand: this.ctxBrand }; }
+          else { Object.assign(this, keep); if (!r.unknown) later.push((ownBrand || !lastBrand ? '' : lastBrand.toLowerCase() + ' ') + seg.raw); }
+          continue;
+        }
+        if (r.note) { notes.push(r.note); if (r.updated) updates++; if (r.removed) removed++; }
       }
+      if (asked) { this.lastSku = asked.lastSku; this.ctxBrand = asked.ctxBrand; }   // context stays on the item being asked about
+      if (later.length) this.queue = later.concat(this.queue || []);
       if (!notes.length && !questions.length) return null;
       this.misses = 0;
-      if (this.stage === 'readback' && !questions.length) return this.readback();
+      lead = lead || '';
+      if (this.stage === 'readback' && !questions.length) return this.readback(lead);
       const done = I.done && !questions.length;
       let msg = '';
       const added = notes.filter(Boolean);
-      if (added.length && !done) msg = removed && added.length === removed ? (this.S.lang === 'hi' ? `Theek hai, ${joinList(added, 'hi')}. Aur kuch?` : `Okay, ${joinList(added, 'en')}. Anything else?`) : (updates === 1 && added.length === 1 && this.lastUpdate) ? this.t('updated', this.lastUpdate) : this.t('added', { items: joinList(added, this.S.lang) });
-      if (questions.length) msg = (added.length ? (this.S.lang === 'hi' ? `${joinList(added, 'hi')} note kar liya. ` : `Noted ${joinList(added, 'en')}. `) : '') + questions[0];
-      if (done) return this.afterDone(added.length ? (this.S.lang === 'hi' ? `${joinList(added, 'hi')} note kar liya. ` : `Noted ${joinList(added, 'en')}. `) : '');
-      return this.say(msg);
+      if (added.length && !done) msg = removed && added.length === removed ? this.ph('swapped', this.join(added)) : (updates === 1 && added.length === 1 && this.lastUpdate) ? this.t('updated', this.lastUpdate) : this.t('added', { items: this.join(added) });
+      if (questions.length) msg = (added.length ? this.ph('noted', this.join(added)) : '') + questions[0];
+      if (done) return this.afterDone(lead + (added.length ? this.ph('noted', this.join(added)) : ''));
+      return this.say(this.withPre(lead, msg));
+    }
+    // A question was answered (note: the line it booked, or null). Items the retailer gave in the same breath, which
+    // waited for that answer, are taken now in the same reply.
+    answered(note, lead) {
+      lead = lead || '';
+      if (this.queue && this.queue.length && !this.S.closed) {
+        const q = this.queue.splice(0).join(' , '), nq = normalize(q);
+        const r = this.handleItems(nq, intents(nq), q, 1, note ? [note] : [], lead);
+        if (r) return r;
+      }
+      return this.say(this.withPre(lead, note ? this.t('added', { items: note }) : this.t('anythingElse')));
     }
     applyQty(sku, qtyTok, conf, text) {
       const p = this.idx.products[sku];
@@ -1071,8 +1219,8 @@
       }
       if (res.error) return { question: this.t('fallback') };
       this.lastSku = sku;
-      if (res.action === 'updated') { this.lastUpdate = { item: p.Short, qty: q }; return { note: this.S.lang === 'hi' ? `${p.Short} ab ${q} pieces` : `${p.Short} now ${q} pieces`, updated: true }; }
-      return { note: qtyPhrase(p.Short, q, this.S.lang) };
+      if (res.action === 'updated') { this.lastUpdate = { item: p.Short, qty: q }; return { note: this.ph('nowNote', p.Short, q), updated: true }; }
+      return { note: this.qty(p.Short, q) };
     }
     resolvePending(norm, I, text, conf) {
       const P = this.pending;
@@ -1083,14 +1231,14 @@
         if (lastNum && !segs.some(s => s.brand && candidates(this.idx, s, null).every(c => c.SKU_ID !== P.sku))) {
           this.pending = null; const r = this.applyQty(P.sku, lastNum, conf, text);
           if (r.question) return this.say(r.question);
-          return this.say(this.t('added', { items: r.note }));
+          return this.answered(r.note);
         }
         if (I.sameAsLast) {
           const h = (this.idx.history[this.S.rid] || []).find(x => x.SKU_ID === P.sku);
-          if (h && h.Last_Order_Qty > 0) { this.pending = null; const r = this.applyQty(P.sku, { n: h.Last_Order_Qty, unit: 'piece' }, conf, text); if (r.question) return this.say(r.question); return this.say(this.t('added', { items: r.note })); }
+          if (h && h.Last_Order_Qty > 0) { this.pending = null; const r = this.applyQty(P.sku, { n: h.Last_Order_Qty, unit: 'piece' }, conf, text); if (r.question) return this.say(r.question); return this.answered(r.note); }
         }
         if (I.vague) { const h = (this.idx.history[this.S.rid] || []).find(x => x.SKU_ID === P.sku); return this.say(this.t('vague', { item: this.idx.products[P.sku].Short, last: h ? h.Last_Order_Qty : '-' })); }
-        if (I.deny && !lastNum) { this.pending = null; return this.say(this.t('anythingElse')); }
+        if (I.deny && !lastNum) { this.pending = null; return this.answered(null); }
         return null;
       }
       if (P.type === 'size') {
@@ -1105,6 +1253,13 @@
         if (!pick && seg.sizeWord === 'small') pick = opts.slice().sort((a, b) => a.Pack_Measure - b.Pack_Measure)[0];
         if (!pick && seg.sizeWord === 'large') pick = opts.slice().sort((a, b) => b.Pack_Measure - a.Pack_Measure)[0];
         if (!pick && seg.variants && seg.variants.length) { const c = candidates(this.idx, seg, this.ctxBrand).filter(p => P.options.includes(p.SKU_ID)); if (c.length === 1) pick = c[0]; }
+        if (!pick) {   // a word only one option has: "jar", "pouch wala", "pouches"
+          const words = o => o.Short.toLowerCase().split(' ').filter(w => /^[a-z]{3,}$/.test(w));
+          const uniq = opts.map(o => words(o).filter(w => !opts.some(x => x !== o && words(x).includes(w))));
+          const toks = new Set(norm.split(' '));
+          const hits = opts.filter((o, i) => uniq[i].some(w => toks.has(w) || toks.has(w + 's') || toks.has(w + 'es')));
+          if (hits.length === 1) pick = hits[0];
+        }
         if (!pick) return null;
         this.pending = null; this.lastSku = pick.SKU_ID; this.ctxBrand = pick.Brand;
         let qtok = P.qty || nums.find(x => x.n !== pick.Pack_Measure) || null;
@@ -1112,7 +1267,7 @@
         if (!qtok) { const h = (this.idx.history[this.S.rid] || []).find(x => x.SKU_ID === pick.SKU_ID); this.pending = { type: 'qty', sku: pick.SKU_ID }; return this.say(this.t('askQty', { item: pick.Short, last: h && h.Last_Order_Qty })); }
         const r = this.applyQty(pick.SKU_ID, qtok, conf, text);
         if (r.question) return this.say(r.question);
-        return this.say(this.t('added', { items: r.note }));
+        return this.answered(r.note);
       }
       if (P.type === 'litreChoice') {
         let pick = null;
@@ -1124,46 +1279,56 @@
         this.pending = null;
         const r = this.addLine(pick.sku, pick.qty, 'retailer_request');
         if (r.question) return this.say(r.question);
-        return this.say(this.t('added', { items: r.note }));
+        return this.answered(r.note);
       }
       if (P.type === 'box') {
         const p = this.idx.products[P.sku];
         const boxWord = /\b(box|boxes|dabba|dabbe|peti|carton|cartons|case|cases)\b/.test(norm);
         const convWord = /\b(mein|me|in|per|har|each)\b/.test(norm);
+        if (boxWord && convWord) {
+          // the retailer states the conversion himself: "ek box mein 24", "there are 24 in a box", "12 pieces in one box" -> compute, but confirm
+          const per = nums.filter(x => x.unit !== 'box' && x.n > 1).slice(-1)[0] || (nums.length === 1 && nums[0].n > 1 ? nums[0] : null);
+          if (per) {
+            this.pending = { type: 'boxConfirm', sku: P.sku, total: P.n * per.n, n: P.n, per: per.n };
+            return this.say(this.t('confirmBoxCalc', { n: P.n, per: per.n, total: P.n * per.n, item: p.Short }));
+          }
+        }
         const pieceTok = nums.find(x => x.unit === 'piece') || (nums.length === 1 && !nums[0].unit && !(boxWord && convWord) ? nums[0] : null);
         if (pieceTok) {
           this.pending = null; const r = this.addLine(P.sku, pieceTok.n, 'retailer_request');
           if (r.question) return this.say(r.question);
-          return this.say(this.t('added', { items: r.note }));
+          return this.answered(r.note);
         }
         // retailer states the conversion himself: "ek box mein 24" -> compute but confirm, never assume
         const per = nums.find(x => x.n > 1 && x.unit !== 'box');
         if (per && convWord) {
-          this.pending = { type: 'boxConfirm', sku: P.sku, total: P.n * per.n };
+          this.pending = { type: 'boxConfirm', sku: P.sku, total: P.n * per.n, n: P.n, per: per.n };
           return this.say(this.t('confirmBoxCalc', { n: P.n, per: per.n, total: P.n * per.n, item: p.Short }));
         }
         if (/pata nahi|nahi pata|maloom nahi|malum nahi|dont know|don't know|not sure|idea nahi/.test(norm) || (I.deny && !nums.length)) {
           const h = (this.idx.history[this.S.rid] || []).find(x => x.SKU_ID === P.sku);
           this.pending = { type: 'qty', sku: P.sku };
-          return this.say((this.S.lang === 'hi' ? 'Koi baat nahi. ' : 'No problem. ') + this.t('askQty', { item: p.Short, last: h && h.Last_Order_Qty }));
+          return this.say(this.ph('noProblemPre') + this.t('askQty', { item: p.Short, last: h && h.Last_Order_Qty }));
         }
         return this.say(this.t('askBox', { n: P.n, item: p.Short }));
       }
       if (P.type === 'boxConfirm') {
-        if (I.affirm && !I.deny) { this.pending = null; const r = this.addLine(P.sku, P.total, 'retailer_request'); if (r.question) return this.say(r.question); return this.say(this.t('added', { items: r.note })); }
-        if (lastNum) { this.pending = null; const r = this.addLine(P.sku, lastNum.n, 'retailer_request'); if (r.question) return this.say(r.question); return this.say(this.t('added', { items: r.note })); }
+        // the retailer has just confirmed this exact number, so no second "that's well above your usual" check
+        if (I.affirm && !I.deny) { this.pending = null; const r = this.addLine(P.sku, P.total, 'retailer_request', true); if (r.question) return this.say(r.question); return this.answered(r.note); }
+        if (lastNum) { this.pending = null; const r = this.addLine(P.sku, lastNum.n, 'retailer_request'); if (r.question) return this.say(r.question); return this.answered(r.note); }
         this.pending = { type: 'box', sku: P.sku, n: 1 }; return this.say(this.t('askQty', { item: this.idx.products[P.sku].Short }));
       }
       if (P.type === 'echo') {
-        if (I.affirm && !I.deny) { this.pending = null; const r = this.addLine(P.sku, P.qty, 'retailer_request'); if (r.question) return this.say(r.question); return this.say(this.t('added', { items: r.note })); }
+        if (I.affirm && !I.deny) { this.pending = null; const r = this.addLine(P.sku, P.qty, 'retailer_request', true); if (r.question) return this.say(r.question); return this.answered(r.note); }
         this.pending = null;
         if (lastNum || segs.some(s => s.brand)) return null;
         return this.say(this.t('unclear'));
       }
       if (P.type === 'bigConfirm') {
-        if (lastNum && lastNum.n !== P.qty) { this.pending = null; const r = this.addLine(P.sku, lastNum.unit === 'dozen' ? lastNum.n * 12 : lastNum.n, P.source); return this.say(r.question || this.t('added', { items: r.note })); }
-        if (I.affirm && !I.deny || lastNum) { this.pending = null; const r = this.addLine(P.sku, P.qty, P.source, true); return this.say(r.question || this.t('added', { items: r.note })); }
+        if (lastNum && lastNum.n !== P.qty) { this.pending = null; const r = this.addLine(P.sku, lastNum.unit === 'dozen' ? lastNum.n * 12 : lastNum.n, P.source); return r.question ? this.say(r.question) : this.answered(r.note); }
+        if (I.affirm && !I.deny || lastNum) { this.pending = null; const r = this.addLine(P.sku, P.qty, P.source, true); return r.question ? this.say(r.question) : this.answered(r.note); }
         if (I.deny) { this.pending = { type: 'qty', sku: P.sku }; return this.say(this.t('askQty', { item: this.idx.products[P.sku].Short })); }
+        if (I.done) return this.reAsk('');   // "bas" / "podhum" to "shall I put 150?" is not an answer: ask again, never drop the line silently
         return null;
       }
       if (P.type === 'stock') {
@@ -1173,22 +1338,23 @@
           const r = this.addLine(P.sku, P.avail, 'retailer_request', true);
           if (r.question) return this.say(r.question);
           this.S.T.log_backorder({ sku_id: P.sku, quantity: P.requested - P.avail, note: 'Balance to follow when distributor restocks' });
+          if (this.queue && this.queue.length) return this.answered(r.note, this.ph('followUp', P.requested - P.avail));
           return this.say(this.t('shortSplit', { item: p.Short, avail: P.avail, rest: P.requested - P.avail }));
         }
-        if (lastNum) { this.pending = null; const r = this.addLine(P.sku, lastNum.n, 'retailer_request', true); if (r.question) return this.say(r.question); return this.say(this.t('added', { items: r.note })); }
-        if (I.done && !I.deny) { this.pending = null; const r = this.addLine(P.sku, P.avail, 'retailer_request', true); if (r.question) return this.say(r.question); return this.say(this.t('added', { items: r.note })); }
-        if (I.deny) { this.pending = null; return this.say(this.t('declineOk') + ' ' + this.t('anythingElse')); }
+        if (lastNum) { this.pending = null; const r = this.addLine(P.sku, lastNum.n, 'retailer_request', true); if (r.question) return this.say(r.question); return this.answered(r.note); }
+        if (I.done && !I.deny) { this.pending = null; const r = this.addLine(P.sku, P.avail, 'retailer_request', true); if (r.question) return this.say(r.question); return this.answered(r.note); }
+        if (I.deny) { this.pending = null; return this.answered(null, this.t('declineOk') + ' '); }
         return this.say(this.t('shortAgain', { item: p.Short, avail: P.avail, rest: P.requested - P.avail }));
       }
       if (P.type === 'alt') {
         const p = this.idx.products[P.sku];
         if (I.affirm && !I.deny) {
           this.pending = null; this.lastSku = P.sku;
-          if (lastNum) { const r = this.addLine(P.sku, lastNum.n, 'agent_alternative'); return this.say(r.question || this.t('added', { items: r.note })); }
+          if (lastNum) { const r = this.addLine(P.sku, lastNum.n, 'agent_alternative'); return r.question ? this.say(r.question) : this.answered(r.note); }
           this.pending = { type: 'qty', sku: P.sku }; this.pendingSource = 'agent_alternative';
           return this.say(this.t('askQty', { item: p.Short }));
         }
-        if (I.deny) { this.pending = null; return this.say(this.t('declineOk') + ' ' + this.t('anythingElse')); }
+        if (I.deny) { this.pending = null; return this.answered(null, this.t('declineOk') + ' '); }
         return null;
       }
       if (P.type === 'suggest') {
@@ -1204,7 +1370,7 @@
           }
           const r = this.addLine(P.sku, q, P.source);
           if (r.question) return this.say(r.question);
-          return this.readback(this.S.lang === 'hi' ? `${r.note} add kar diya. ` : `Added ${r.note}. `);
+          return this.readback(this.ph('addedPre', r.note));
         }
         if (I.deny || I.done) { this.pending = null; this.S.events.push({ type: 'SUGGESTION_DECLINED', sku_id: P.sku }); return this.readback(this.t('declineOk') + ' '); }
         return null;
@@ -1245,8 +1411,7 @@
       if (I.price && (!seg || !(seg.brand || seg.variants.length || seg.size))) {
         const P = this.pending, sku = (P && P.sku) || this.lastSku, p = sku && this.idx.products[sku];
         if (p) {
-          const hiL = this.S.lang === 'hi';
-          const tail = P && P.type === 'suggest' ? (hiL ? ` ${P.qty} bhej doon?` : ` Shall I add ${P.qty}?`) : P && P.type === 'qty' ? (hiL ? ' Kitne bhejun?' : ' How many should I send?') : '';
+          const tail = P && P.type === 'suggest' ? this.ph('tailAdd', P.qty) : P && P.type === 'qty' ? this.ph('tailQty') : '';
           return this.say(this.t('price', { item: p.Short, bill: inr(p.Distributor_Billing_Price_INR), mrp: inr(p.MRP_INR), margin: inr(p.MRP_INR - p.Distributor_Billing_Price_INR) }) + tail);
         }
       }
@@ -1271,9 +1436,8 @@
       const ordered = lines.filter(fits).concat(lines.filter(b => !fits(b)));
       const notes = [], qs = [];
       for (const b of ordered) { const r = this.addLine(b.sku, b.lastQty, 'retailer_request'); if (r.question) { qs.push(r.question); break; } notes.push(r.note); }
-      const hi = this.S.lang === 'hi';
-      if (qs.length) return this.say((notes.length ? (hi ? joinList(notes, 'hi') + ' note kar liya. ' : 'Noted ' + joinList(notes, 'en') + '. ') : '') + qs[0]);
-      return this.say(this.t('added', { items: joinList(notes, this.S.lang) }));
+      if (qs.length) return this.say((notes.length ? this.ph('noted', this.join(notes)) : '') + qs[0]);
+      return this.say(this.t('added', { items: this.join(notes) }));
     }
     afterDone(prefix) {
       prefix = prefix || '';
@@ -1286,17 +1450,18 @@
         const s = this.pickSuggestion();
         this.suggested = true;
         if (s) {
-          this.pending = { type: 'suggest', sku: s.sku, qty: s.qty, source: s.source };
+          this.pending = { type: 'suggest', sku: s.sku, qty: s.qty, source: s.source, say: s.say };
           return this.say(prefix + s.text);
         }
       }
       return this.readback(prefix);
     }
     pickSuggestion() {
-      // ONE suggestion per call: (1) validated cross-sell/replenishment hint, else (2) best due line from a brand not yet ordered
+      // ONE suggestion per call: (1) validated cross-sell/replenishment hint, else (2) best due line from a brand not yet ordered.
+      // say() renders it in the current language (kept so it can be asked again if the retailer switches language).
       const p = this.S.plan, inCart = new Set(this.S.cart.map(l => l.sku));
       const cross = p.cross.pick;
-      const lang = this.S.lang;
+      const pick = (sku, qty, source, say) => ({ sku, qty, source, say, text: say() });
       if (cross && !inCart.has(cross.sku) && (cross.type !== 'trade-up' || this.S.cart.some(l => l.sku.startsWith('P00')))) {
         const prod = this.idx.products[cross.sku];
         const avail = stockOf(this.idx, this.S.dist, cross.sku).available;
@@ -1304,31 +1469,74 @@
         if (qty > 0) {
           if (cross.type === 'replenishment') {
             const h = this.idx.history[this.S.rid].find(x => x.SKU_ID === cross.sku);
-            return { sku: cross.sku, qty, source: 'agent_recommendation', text: this.t('suggestRepl', { item: prod.Short, last: h.Last_Order_Qty, qty }) };
+            return pick(cross.sku, qty, 'agent_recommendation', () => this.t('suggestRepl', { item: prod.Short, last: h.Last_Order_Qty, qty }));
           }
           if (cross.type === 'trade-up') {
             const m = s => inr(this.idx.products[s].MRP_INR - this.idx.products[s].Distributor_Billing_Price_INR);
-            return { sku: cross.sku, qty, source: 'cross_sell', text: this.t('suggestTrade', { m500: m('P003'), m200: m('P002'), qty }) };
+            return pick(cross.sku, qty, 'cross_sell', () => this.t('suggestTrade', { m500: m('P003'), m200: m('P002'), qty }));
           }
-          const peer = Math.round(this.idx.peer(this.S.r.Segment, cross.sku) * 100);
-          const why = lang === 'hi' ? (peer >= 20 ? `Aap jaisi ${peer}% dukaanein ise rakhti hain.` : `Ye aapke yahan abhi nahi hai aur trial pack chhota hai.`) : (peer >= 20 ? `${peer}% of similar stores stock it.` : `You don't stock it yet and the trial pack is small.`);
-          return { sku: cross.sku, qty, source: 'cross_sell', text: this.t('suggestNew', { item: prod.Short, qty, why }) };
+          const peer = Math.round(this.idx.peer(this.S.r.Segment, cross.sku) * 100), w = peer >= 20 ? 0 : 1;
+          return pick(cross.sku, qty, 'cross_sell', () => {
+            const L = this.S.lang, en = WHY_EN[w](peer);
+            const why = L === 'hi' ? WHY_HI[w](peer) : isLocal(L) && LG.WHY && LG.WHY[L] ? LG.WHY[L][w](peer) : en;
+            if (isLocal(L)) this.reg(why, en);
+            return this.t('suggestNew', { item: prod.Short, qty, why });
+          });
         }
       }
       const due = p.basket.filter(b => !inCart.has(b.sku) && b.due && !b.lapsed && b.stock > 0 && b.value >= 0.08 * p.pref.Typical_Order_Value_INR &&
         !this.S.cart.some(l => this.idx.products[l.sku].Brand === b.brand));
       if (due.length) {
         const b = due[0];
-        return { sku: b.sku, qty: b.suggestedQty, source: 'agent_recommendation', text: this.t('suggestRepl', { item: b.name, last: b.lastQty, qty: b.suggestedQty }) };
+        return pick(b.sku, b.suggestedQty, 'agent_recommendation', () => this.t('suggestRepl', { item: b.name, last: b.lastQty, qty: b.suggestedQty }));
       }
       return null;
+    }
+    // The retailer only asked for another language mid-call: ask the open question again, now in that language
+    langOnly(norm, I) {
+      if (segments(norm).some(s => s.brand || s.variants.length || s.size || s.nums.length || s.litreNums.length)) return false;
+      return !(I.dnc || I.human || I.busy || I.complaint || I.discount || I.done || I.cancelOrder || I.price || I.sizes || I.totalQ || I.stockQ || I.terms ||
+        I.objection || I.remove || I.sameAsLast || I.vague || I.whoAreYou || I.notInterested || I.stockedUp || I.competitor || I.wrongParty || I.ownerAway);
+    }
+    // "Sure. " + "Sure. Last time ..." -> one "Sure."
+    withPre(pre, text) {
+      const w = x => String(x).trim().split(/[\s,.!?।]+/)[0].toLowerCase();
+      return !pre ? text : w(pre) === w(text) ? text : lowerAfterComma(pre, text);
+    }
+    reAsk(pre) {
+      const P = this.pending, pr = P && P.sku && this.idx.products[P.sku];
+      const hist = sku => (this.idx.history[this.S.rid] || []).find(x => x.SKU_ID === sku);
+      if (this.stage === 'readback' && this.S.cart.length) return this.readback(pre);
+      if (P) {
+        switch (P.type) {
+          case 'suggest': if (P.say) return this.say(this.withPre(pre, P.say())); break;
+          case 'qty': if (pr) { const h = hist(P.sku); return this.say(this.withPre(pre, this.t('askQty', { item: pr.Short, last: h && h.Last_Order_Qty }))); } break;
+          case 'size': {
+            const opts = P.options.map(s => this.idx.products[s]);
+            return this.say(this.withPre(pre, new Set(opts.map(o => o.Brand)).size > 1 ? this.t('askWhich', { options: this.join(opts.map(o => o.Short), 'or') })
+              : this.t('askSize', { brand: opts[0].Brand, options: this.sizeOptions(opts[0].Brand, opts) })));
+          }
+          case 'box': return this.say(this.withPre(pre, this.t('askBox', { n: P.n, item: pr.Short })));
+          case 'boxConfirm': if (P.per) return this.say(this.withPre(pre, this.t('confirmBoxCalc', { n: P.n, per: P.per, total: P.total, item: pr.Short }))); break;
+          case 'stock': return this.say(this.withPre(pre, this.t('short', { item: pr.Short, avail: P.avail, rest: P.requested - P.avail })));
+          case 'alt': return this.say(this.withPre(pre, this.t('oosAlt', { item: this.idx.products[P.from].Short, alt: pr.Short })));
+          case 'bigConfirm': { const h = hist(P.sku); return this.say(this.withPre(pre, this.t('bigQty', { item: pr.Short, qty: P.qty, usual: h ? Math.max(h.Last_Order_Qty, h.Previous_Order_Qty) : P.qty }))); }
+          case 'echo': return this.say(this.withPre(pre, this.t('echo', { item: pr.Short, qty: P.qty })));
+          case 'litreChoice': if (P.litres) { const [a, b] = P.options; return this.say(this.withPre(pre, this.t('litreAmb', { v: P.litres, a: this.qty(this.idx.products[a.sku].Short, a.qty), b: this.qty(this.idx.products[b.sku].Short, b.qty) }))); } break;
+          case 'finalQ': return this.say(this.withPre(pre, this.t('finalQ')));
+          case 'complaint': return this.say(this.withPre(pre, this.t('complaintAsk')));
+          case 'offerHuman': return this.say(this.withPre(pre, this.t('offerHuman')));
+        }
+      }
+      if (!this.S.cart.length && this.stage === 'ordering' && !this.complained && !this.humanAsked) return this.leadLines(pre);
+      return this.say(this.withPre(pre, this.t('anythingElse')));
     }
     readback(prefix) {
       prefix = prefix || '';
       this.stage = 'readback'; this.pending = null;
       const sum = this.S.T.get_order_summary();
-      const lines = linesPhrase(sum.lines.map(l => ({ name: l.product, qty: l.quantity })), this.S.lang);
-      return this.say(prefix + this.t('readback', { lines, total: inr(sum.order_value_inr) }));
+      const lines = this.lines(sum.lines.map(l => ({ name: l.product, qty: l.quantity })));
+      return this.say(this.withPre(prefix, this.t('readback', { lines, total: inr(sum.order_value_inr) })));
     }
     confirm(text) {
       const r = this.S.T.confirm_order({ retailer_confirmation: text });
