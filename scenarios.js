@@ -172,6 +172,23 @@ const TESTS = [
   { id: 'RX20', name: 'Complaint in English is logged, not booked as an order', rid: 'R042',
     turns: [T('Yes, speaking.'), T('The last order came wrong.'), T('Parachute 200 ml was 5 pieces short.')],
     checks: (c, r) => [['Complaint logged', r.events.some(e => e.type === 'COMPLAINT')], ['Nothing added to the order', c.S.cart.length === 0]] },
+  { id: 'RX21', name: 'Yes, no and "that\'s enough" understood in all 10 languages', custom: true,
+    run: () => {
+      const W = { Hindi: ['R042', 'Haan', 'Nahi', 'Bas'], Tamil: ['R010', 'Aamaa', 'Illai', 'Podhum'], Telugu: ['R013', 'Avunu', 'Vaddu', 'చాలు'],
+        Kannada: ['R015', 'Haudu', 'Beda', 'Saaku'], Malayalam: ['R016', 'Athe', 'Venda', 'Mathi'], Bengali: ['R017', 'Hyan', 'Lagbe na', 'Eituku'],
+        Marathi: ['R008', 'Chalel', 'Nako', 'Evdhach'], Gujarati: ['R005', 'Barabar', 'Nathi', 'Atlu j'], Odia: ['R018', 'Hau', 'Darkar nahi', 'Etiki'], Assamese: ['R020', 'Hoi', 'Nalage', 'ইমানেই'] };
+      const SAY = { P003: 'Parachute 500 ml 10 pieces', P002: 'Parachute 200 ml 10 pieces', P006: 'Saffola Gold 1 litre pouch 10 pieces' };
+      return Object.entries(W).map(([lang, [rid, yes, no, enough]]) => {
+        const idx = A.buildIndex(DATA), c = new A.Conversation(idx, rid); c.start();
+        c.hear(yes); const idOk = c.S.identityVerified;
+        const sku = Object.keys(SAY).find(k => { const st = A.stockOf(idx, c.S.dist, k); return st && st.available >= 30; });
+        c.hear(SAY[sku]); c.hear(enough);
+        if (c.pending && c.pending.type === 'suggest') c.hear(no);
+        const atReadback = c.stage === 'readback';
+        c.hear(yes);
+        return [`${lang}: "${yes}" / "${no}" / "${enough}" understood, order placed`, idOk && atReadback && c.S.record().outcome === 'ORDER_CONFIRMED'];
+      });
+    } },
   { id: 'RX5', name: 'Planner skips do-not-call retailers', custom: true,
     run: () => { const idx = A.buildIndex(DATA); const plan = A.dailyCallPlan(idx); const dnc = plan.filter(p => p.decision === 'DO_NOT_CALL').map(p => p.rid);
       return [['R001, R025, R082 never called', ['R001', 'R025', 'R082'].every(x => dnc.includes(x)) && dnc.length === 3]]; } },

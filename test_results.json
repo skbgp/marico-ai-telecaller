@@ -4003,6 +4003,56 @@
   }
  },
  {
+  "id": "RX21",
+  "name": "Yes, no and \"that's enough\" understood in all 10 languages",
+  "rid": null,
+  "pass": true,
+  "checks": [
+   {
+    "check": "Hindi: \"Haan\" / \"Nahi\" / \"Bas\" understood, order placed",
+    "pass": true
+   },
+   {
+    "check": "Tamil: \"Aamaa\" / \"Illai\" / \"Podhum\" understood, order placed",
+    "pass": true
+   },
+   {
+    "check": "Telugu: \"Avunu\" / \"Vaddu\" / \"చాలు\" understood, order placed",
+    "pass": true
+   },
+   {
+    "check": "Kannada: \"Haudu\" / \"Beda\" / \"Saaku\" understood, order placed",
+    "pass": true
+   },
+   {
+    "check": "Malayalam: \"Athe\" / \"Venda\" / \"Mathi\" understood, order placed",
+    "pass": true
+   },
+   {
+    "check": "Bengali: \"Hyan\" / \"Lagbe na\" / \"Eituku\" understood, order placed",
+    "pass": true
+   },
+   {
+    "check": "Marathi: \"Chalel\" / \"Nako\" / \"Evdhach\" understood, order placed",
+    "pass": true
+   },
+   {
+    "check": "Gujarati: \"Barabar\" / \"Nathi\" / \"Atlu j\" understood, order placed",
+    "pass": true
+   },
+   {
+    "check": "Odia: \"Hau\" / \"Darkar nahi\" / \"Etiki\" understood, order placed",
+    "pass": true
+   },
+   {
+    "check": "Assamese: \"Hoi\" / \"Nalage\" / \"ইমানেই\" understood, order placed",
+    "pass": true
+   }
+  ],
+  "transcript": [],
+  "record": null
+ },
+ {
   "id": "RX5",
   "name": "Planner skips do-not-call retailers",
   "rid": null,

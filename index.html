@@ -161,14 +161,14 @@ details summary{cursor:pointer}
     <div class="tab" id="t-tools" hidden></div>
     <div class="tab" id="t-json" hidden></div>
     <div class="tab" id="t-tests" hidden>
-      <div class="row"><button class="primary" id="runTests">Run tests</button><span class="why" id="testSum">CS01-CS19 from the workbook, SX1-SX6 surprise scenarios from the brief, RX1-RX20 extra checks. Uses the rule-based engine.</span></div>
+      <div class="row"><button class="primary" id="runTests">Run tests</button><span class="why" id="testSum">CS01-CS19 from the workbook, SX1-SX6 surprise scenarios from the brief, RX1-RX21 extra checks. Uses the rule-based engine.</span></div>
       <div id="testOut"></div>
     </div>
   </aside>
 </main>
-<script src="agent_core.js?v=20261126-2"></script>
-<script src="scenarios.js?v=20261126-2"></script>
-<script src="voice.js?v=20261126-2"></script>
+<script src="agent_core.js?v=20261127-1"></script>
+<script src="scenarios.js?v=20261127-1"></script>
+<script src="voice.js?v=20261127-1"></script>
 <script>
 {
 const $ = s => document.querySelector(s);
@@ -210,6 +210,10 @@ const CH = {
   finalQ: { hi: ['Haan, final kar do', 'Nahi, aur bhi chahiye'], en: ['Yes, finalise it', 'No, I need more'] },
   readback: { hi: ['Haan, confirm kar dijiye', 'Nahi, {q} nahi {q2} kar do', 'Kitna hua total?', 'Order cancel kar do'], en: ['Yes, place the order', 'Make it {q2} instead of {q}', 'Cancel the order'] }
 };
+
+// yes / no / "that's all" in the retailer's own language: shown as extra test replies (the engine understands them)
+const NATIVE = { Tamil: ['Aamaa', 'Illai', 'Podhum'], Telugu: ['Avunu', 'Vaddu', 'చాలు'], Kannada: ['Haudu', 'Beda', 'Saaku'], Malayalam: ['Athe', 'Venda', 'Mathi'],
+  Bengali: ['Hyan', 'Lagbe na', 'Eituku'], Marathi: ['Chalel', 'Nako', 'Evdhach'], Gujarati: ['Haa', 'Nathi joitu', 'Atlu j'], Odia: ['Hau', 'Darkar nahi', 'Etiki'], Assamese: ['Hoi', 'Nalage', 'Imanei'] };
 
 const LANGCODE = { Hindi: 'hi-IN', Gujarati: 'gu-IN', Marathi: 'mr-IN', Tamil: 'ta-IN', Telugu: 'te-IN', Kannada: 'kn-IN', Malayalam: 'ml-IN', Bengali: 'bn-IN', Odia: 'or-IN', Assamese: 'as-IN' };
 
@@ -596,7 +600,13 @@ function chipList() {
   }
   const last = conv.S.cart[conv.S.cart.length - 1], q = last ? last.qty : 10, q2 = q + 5;
   const sur = current().retailer.Owner_Name.split(' ').slice(-1)[0];
-  return CH[k][en ? 'en' : 'hi'].filter(c => (last || !/\{q/.test(c)) && !(conv.complained && /galat aaya|came wrong/.test(c))).map(c => c.replace(/\{sur\}/g, sur).replace(/\{q2\}/g, q2).replace(/\{q\}/g, q));
+  const list = CH[k][en ? 'en' : 'hi'].filter(c => (last || !/\{q/.test(c)) && !(conv.complained && /galat aaya|came wrong/.test(c))).map(c => c.replace(/\{sur\}/g, sur).replace(/\{q2\}/g, q2).replace(/\{q\}/g, q));
+  const L = current().language, nat = NATIVE[L];
+  if (nat) {   // the retailer's own words for yes / no / that's all, where they fit
+    const pick = { identity: [0, 'yes'], readback: [0, 'yes'], finalQ: [0, 'yes'], suggest: [1, 'no'], cart: [2, "that's all"] }[k];
+    if (pick) list.unshift([nat[pick[0]], `${nat[pick[0]]} (${L}: ${pick[1]})`]);
+  }
+  return list;
 }
 function renderChips() {
   const el = $('#chips'), list = chipList();
@@ -604,8 +614,8 @@ function renderChips() {
     el.innerHTML = '<span>' + (callState === 'ended' ? 'Call ended. Click <b>Call again</b> or pick another retailer.' : callState === 'idle' ? 'Test replies show here once the call connects.' : 'Connecting...') + '</span>';
     return;
   }
-  const all = showAllChips ? CHIPS.filter(c => !list.includes(c)) : [];
-  el.innerHTML = '<span>Test replies:</span>' + list.map(c => `<button type="button" data-say="${esc(c)}">${esc(c)}</button>`).join('') +
+  const all = showAllChips ? CHIPS.filter(c => !list.some(x => (Array.isArray(x) ? x[0] : x) === c)) : [];
+  el.innerHTML = '<span>Test replies:</span>' + list.map(c => { const [say, show] = Array.isArray(c) ? c : [c, c]; return `<button type="button" data-say="${esc(say)}">${esc(show)}</button>`; }).join('') +
     `<button type="button" class="more" id="moreChips">${showAllChips ? 'Fewer' : 'More...'}</button>` +
     (all.length ? '<div class="allchips">' + all.map(c => `<button type="button" data-say="${esc(c)}">${esc(c)}</button>`).join('') + '</div>' : '');
 }
@@ -653,7 +663,7 @@ $('#mic').onclick = () => {
   startListening();
 };
 
-fetch('marico_data.json?v=20261126-2').then(r => r.json()).then(d => {
+fetch('marico_data.json?v=20261127-1').then(r => r.json()).then(d => {
   DATA = d; idx = AgentCore.buildIndex(DATA); plan = AgentCore.dailyCallPlan(idx);
   selectRetailer(sel);
 }).catch(() => { $('#log').innerHTML = '<div class="empty"><h3>Data did not load.</h3><p>Reload the page.</p></div>'; });

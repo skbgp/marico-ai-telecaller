@@ -266,9 +266,29 @@
 
   const KW = {
     affirm: ['haan', 'ha', 'haa', 'han', 'hanji', 'ji haan', 'jee haan', 'ji boliye', 'ji bataiye', 'speaking', 'bol raha', 'bol rahi', 'main hi hoon', 'theek hai', 'thik hai', 'theek', 'ok', 'okay', 'okk', 'yes', 'yeah', 'yep',
-      'sure', 'confirm', 'kar do', 'kar dijiye', 'chalega', 'bilkul', 'sahi hai', 'correct', 'right', 'done', 'place it', 'go ahead', 'bataiye', 'boliye', 'haanji'],
-    deny: ['nahi', 'nahin', 'na', 'no', 'nope', 'mat', 'rehne do', 'rahne do', 'rehne dijiye', 'rahne dijiye', 'jane do', 'jaane do', 'chhodo', 'chhod do', 'leave it', 'skip it', 'not now', "don't", 'dont', 'abhi nahi'],
-    done: ['bas', 'bas itna', "that's all", 'thats all', 'that is all', 'itna hi', 'aur kuch nahi', 'nothing else', 'bas yahi', 'enough', 'itna kaafi', 'no more'],
+      'sure', 'confirm', 'kar do', 'kar dijiye', 'chalega', 'bilkul', 'sahi hai', 'correct', 'right', 'done', 'place it', 'go ahead', 'bataiye', 'boliye', 'haanji',
+      // yes / okay in the other eight languages of the retailer master (typed in English letters or in their own script)
+      'aamaa', 'aama', 'aamam', 'aamaam', 'seri', 'sari', 'ஆமா', 'ஆமாம்', 'சரி',   // Tamil
+      'avunu', 'avnu', 'అవును', 'సరే',   // Telugu
+      'haudu', 'houdu', 'howdu', 'ಹೌದು', 'ಸರಿ',   // Kannada
+      'athe', 'aathe', 'sheri', 'അതെ', 'ശരി',   // Malayalam
+      'hyan', 'hya', 'thik ache', 'thik achhe', 'হ্যাঁ', 'ঠিক আছে',   // Bengali
+      'chalel', 'hoy',   // Marathi ('ho' is left out: it clashes with Hindi 'ho gaya')
+      'barabar', 'હા', 'બરાબર',   // Gujarati
+      'hau', 'thik achhi', 'ହଁ', 'ଠିକ ଅଛି',   // Odia
+      'hoi', 'thik ase', 'হয়', 'ঠিক আছে'],   // Assamese
+    deny: ['nahi', 'nahin', 'na', 'no', 'nope', 'mat', 'rehne do', 'rahne do', 'rehne dijiye', 'rahne dijiye', 'jane do', 'jaane do', 'chhodo', 'chhod do', 'leave it', 'skip it', 'not now', "don't", 'dont', 'abhi nahi',
+      'illai', 'illa', 'vendam', 'vendaam', 'venaam', 'இல்லை', 'வேண்டாம்',   // Tamil
+      'ledu', 'vaddu', 'లేదు', 'వద్దు',   // Telugu
+      'beda', 'ಇಲ್ಲ', 'ಬೇಡ',   // Kannada
+      'venda', 'ഇല്ല', 'വേണ്ട',   // Malayalam
+      'lagbe na', 'chai na', 'না', 'লাগবে না',   // Bengali
+      'nako', 'नको',   // Marathi
+      'nathi', 'nathi joitu', 'ના', 'નથી',   // Gujarati
+      'darkar nahi', 'ନା', 'ଦରକାର ନାହିଁ',   // Odia
+      'nalage', 'nai lage', 'নালাগে'],   // Assamese
+    done: ['bas', 'bas itna', "that's all", 'thats all', 'that is all', 'itna hi', 'aur kuch nahi', 'nothing else', 'bas yahi', 'enough', 'itna kaafi', 'no more',
+      'podhum', 'pothum', 'போதும்', 'చాలు', 'saaku', 'saku', 'ಸಾಕು', 'mathi', 'മതി', 'eituku', 'এইটুকু', 'evdhach', 'itkach', 'एवढंच', 'atlu j', 'aatlu j', 'આટલું જ', 'etiki', 'ଏତିକି', 'imanei', 'ইমানেই'],
     busy: ['busy', 'vyast', 'baad mein', 'baad me', 'later', 'call back', 'callback', 'phir se call', 'phir call', 'shaam ko call', 'abhi time nahi',
       'time nahi hai', 'customer hai', 'grahak hai', 'call me after', 'call after'],
     notInterested: ['nahi chahiye', 'not interested', 'order nahi', 'kuch nahi chahiye', 'koi order nahi', "don't want", 'dont want', 'no order', 'interest nahi',
